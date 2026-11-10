@@ -60,7 +60,12 @@ RUN npx nx run twenty-server:build
 RUN npx nx run twenty-front:lingui:extract && \
     npx nx run twenty-front:lingui:compile
 
-RUN NODE_OPTIONS="--max-old-space-size=8192" npx nx build twenty-front
+# Lean production front build — no sourcemaps; keeps Railway under build deadlines.
+RUN CI=true \
+    NODE_ENV=production \
+    VITE_BUILD_SOURCEMAP=false \
+    NODE_OPTIONS="--max-old-space-size=12288" \
+    npx nx build twenty-front
 
 # Clean server build output (type declarations and compiled tests not needed at runtime)
 RUN find /app/packages/twenty-server/dist -name '*.d.ts' -delete \
