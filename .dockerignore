@@ -4,7 +4,9 @@
 **/node_modules
 .nx/cache
 **/dist
-**/build
+# Only exclude Vite output dirs — not source folders named `build`
+# (twenty-sdk has src/front-component-renderer/build/).
+packages/twenty-front/build
 packages/twenty-server/.env
 packages/twenty-front/.env
 voice-agent/.env
