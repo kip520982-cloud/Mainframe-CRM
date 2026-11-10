@@ -1,5 +1,15 @@
 .git
+.gitignore
 .env
 **/node_modules
 .nx/cache
+**/dist
+**/build
 packages/twenty-server/.env
+packages/twenty-front/.env
+voice-agent/.env
+**/__pycache__
+*.pyc
+.railway
+railway.json
+railway.toml
