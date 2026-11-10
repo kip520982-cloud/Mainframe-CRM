@@ -1,0 +1,6 @@
+livekit-agents~=1.8
+livekit-plugins-deepgram>=1.8.10
+livekit-plugins-fishaudio~=1.8
+livekit-plugins-openai~=1.8
+livekit-plugins-silero~=1.8
+python-dotenv>=1.2

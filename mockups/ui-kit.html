@@ -1,0 +1,983 @@
+<!doctype html>
+<html lang="en" data-theme="night">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mainframe CRM — UI Kit (01 Night + 02 Paper)</title>
+<style>
+  :root {
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --r: 8px;
+    --r-lg: 12px;
+    --stage-new: #8a8a8a;
+    --stage-screen: #9ae6ff;
+    --stage-meeting: #fbbf24;
+    --stage-proposal: #fb7185;
+    --stage-won: #4ade80;
+    --pri-urgent: #fb7185;
+    --pri-high: #fbbf24;
+    --pri-med: #9ae6ff;
+    --pri-low: #666;
+  }
+
+  html[data-theme="night"] {
+    --bg: #050505;
+    --bg-elev: #0a0a0a;
+    --bg-panel: #0c0c0c;
+    --bg-row: #121212;
+    --bg-hover: #161616;
+    --line: #1c1c1c;
+    --line-strong: #2a2a2a;
+    --text: #f2f2f2;
+    --muted: #8a8a8a;
+    --faint: #5a5a5a;
+    --brand-fg: #ffffff;
+    --brand-bg: #ffffff;
+    --brand-on: #050505;
+    --accent: #9ae6ff;
+    --danger: #fb7185;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --sidebar: #080808;
+    --input: #111;
+    --shadow: 0 30px 80px -40px rgba(0,0,0,.9);
+    --mark: url("assets/mainframe-mark-light.png");
+    --chrome-dot: #333;
+  }
+
+  html[data-theme="paper"] {
+    --bg: #F7F6F2;
+    --bg-elev: #ffffff;
+    --bg-panel: #ffffff;
+    --bg-row: #FBFBF9;
+    --bg-hover: #F0EEE8;
+    --line: #E6E4DE;
+    --line-strong: #D6D3CA;
+    --text: #141414;
+    --muted: #6B6962;
+    --faint: #8A877C;
+    --brand-fg: #141414;
+    --brand-bg: #141414;
+    --brand-on: #ffffff;
+    --accent: #0E7490;
+    --danger: #BE123C;
+    --ok: #15803D;
+    --warn: #B45309;
+    --sidebar: #F4F3EF;
+    --input: #ffffff;
+    --shadow: 0 24px 60px -36px rgba(20,20,20,.25);
+    --mark: url("assets/mainframe-mark-dark.png");
+    --chrome-dot: #C8C5BC;
+    --stage-new: #6B6962;
+    --stage-screen: #0E7490;
+    --stage-meeting: #B45309;
+    --stage-proposal: #BE123C;
+    --stage-won: #15803D;
+    --pri-urgent: #BE123C;
+    --pri-high: #B45309;
+    --pri-med: #0E7490;
+    --pri-low: #C8C5BC;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:var(--font-sans);
+    background:var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    padding:0 0 80px;
+  }
+  .mono{font-family:var(--font-mono)}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;cursor:pointer}
+
+  /* —— sticky kit chrome —— */
+  .kit-bar{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    padding:12px 22px;border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--bg-elev) 92%, transparent);
+    backdrop-filter:blur(12px);
+  }
+  .kit-brand{display:flex;align-items:center;gap:10px}
+  .kit-brand .mark{
+    width:28px;height:28px;border-radius:6px;
+    background:var(--mark) center/contain no-repeat;
+  }
+  .kit-brand .word{
+    font-family:var(--font-mono);font-size:14px;font-weight:500;letter-spacing:-.02em;
+  }
+  .kit-brand .sub{font-size:11px;color:var(--muted);margin-left:6px}
+  .kit-nav{display:flex;gap:4px;flex-wrap:wrap}
+  .kit-nav a{
+    font-size:11.5px;padding:5px 9px;border-radius:6px;color:var(--muted);
+  }
+  .kit-nav a:hover{background:var(--bg-hover);color:var(--text)}
+  .theme-toggle{
+    display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;
+  }
+  .theme-toggle button{
+    border:0;background:transparent;color:var(--muted);
+    padding:7px 12px;font-size:12px;font-weight:600;
+  }
+  .theme-toggle button.on{background:var(--brand-bg);color:var(--brand-on)}
+
+  .wrap{max-width:1280px;margin:0 auto;padding:36px 22px 0}
+  .intro{margin-bottom:36px}
+  .intro h1{font-size:28px;letter-spacing:-.03em;font-weight:650}
+  .intro h1 em{font-style:normal;color:var(--accent)}
+  .intro p{margin-top:10px;color:var(--muted);max-width:640px;line-height:1.55;font-size:14.5px}
+
+  .section{margin-bottom:56px;scroll-margin-top:72px}
+  .section-h{
+    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px;
+  }
+  .section-h .n{font-family:var(--font-mono);font-size:11px;color:var(--accent);font-weight:600}
+  .section-h h2{font-size:18px;font-weight:650;letter-spacing:-.02em}
+  .section-h .d{font-size:12.5px;color:var(--faint)}
+
+  .frame{
+    border:1px solid var(--line);border-radius:14px;overflow:hidden;
+    background:var(--bg-elev);box-shadow:var(--shadow);
+  }
+  .chrome{
+    display:flex;align-items:center;gap:6px;padding:9px 12px;
+    background:var(--sidebar);border-bottom:1px solid var(--line);
+  }
+  .chrome .dot{width:9px;height:9px;border-radius:50%;background:var(--chrome-dot);opacity:.7}
+  .chrome .url{
+    margin-left:8px;font-family:var(--font-mono);font-size:10.5px;
+    padding:3px 10px;border-radius:6px;background:var(--bg);border:1px solid var(--line);color:var(--faint);
+  }
+
+  /* —— app shell —— */
+  .app{display:grid;grid-template-columns:220px 1fr;min-height:420px}
+  .side{
+    background:var(--sidebar);border-right:1px solid var(--line);padding:14px 10px;
+    display:flex;flex-direction:column;gap:2px;
+  }
+  .side .brand{
+    display:flex;align-items:center;gap:8px;padding:6px 8px 14px;
+    font-family:var(--font-mono);font-size:12px;font-weight:500;
+  }
+  .side .brand .mark{
+    width:22px;height:22px;border-radius:5px;
+    background:var(--mark) center/contain no-repeat;
+  }
+  .side .group{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:650;padding:10px 8px 4px}
+  .side a,.side .item{
+    display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;
+    font-size:12.5px;color:var(--muted);
+  }
+  .side a.on,.side .item.on{background:var(--bg-hover);color:var(--text);font-weight:600}
+  .side .ico{width:14px;opacity:.7}
+  .side .foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--line)}
+
+  /* —— twenty chrome: workspace switcher + utility rows —— */
+  .ws{display:flex;align-items:center;gap:8px;padding:6px 8px 12px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  .ws .mark{width:22px;height:22px;border-radius:5px;background:var(--mark) center/contain no-repeat}
+  .ws .ws-name{font-family:var(--font-mono);font-size:12px;font-weight:600;flex:1;letter-spacing:-.01em}
+  .ws .chev{color:var(--faint);font-size:9px}
+  .side .sk{margin-left:auto;font-family:var(--font-mono);font-size:9px;color:var(--faint);border:1px solid var(--line-strong);border-radius:4px;padding:1px 4px}
+  .side .fav-ico{width:12px;height:12px;border-radius:4px;background:var(--accent);flex-shrink:0}
+
+  /* —— twenty chrome: view bar —— */
+  .viewbar{display:flex;align-items:center;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+  .view-title{display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:650;padding:6px 9px;border-radius:7px;background:var(--bg-hover)}
+  .view-title .chev{font-size:9px;color:var(--faint)}
+  .vbtn{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:7px;border:1px solid var(--line-strong);background:var(--input);color:var(--muted);font-size:12px;font-weight:600}
+  .vbtn:hover{color:var(--text)}
+  .viewbar .spacer{flex:1}
+
+  .main{background:var(--bg);padding:16px;min-width:0}
+  .top{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;
+  }
+  .top h3{font-size:16px;font-weight:650;letter-spacing:-.02em}
+  .top .actions{display:flex;gap:8px;align-items:center}
+
+  .btn{
+    display:inline-flex;align-items:center;gap:5px;border-radius:7px;
+    padding:7px 12px;font-size:12px;font-weight:600;border:1px solid transparent;
+  }
+  .btn.primary{background:var(--brand-bg);color:var(--brand-on)}
+  .btn.ghost{background:transparent;border-color:var(--line-strong);color:var(--text)}
+  .btn.danger{background:transparent;border-color:var(--danger);color:var(--danger)}
+  .btn.sm{padding:5px 9px;font-size:11px}
+
+  .input,.select,.search{
+    background:var(--input);border:1px solid var(--line-strong);border-radius:7px;
+    padding:7px 10px;font-size:12px;color:var(--muted);min-width:140px;
+  }
+  .search{font-family:var(--font-mono);font-size:11px}
+
+  /* board */
+  .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .col{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:8px;min-height:210px}
+  .col-h{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;font-weight:650;padding:2px 2px 8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  .col-h .n{font-family:var(--font-mono);font-weight:500;opacity:.65;font-size:10px}
+  .col-h .col-tools{display:inline-flex;gap:5px;align-items:center;color:var(--faint)}
+  .col-h .col-add{width:15px;height:15px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;border:1px solid var(--line-strong);line-height:1}
+  .col-h .col-kebab{font-size:11px;line-height:1;letter-spacing:.05em}
+  .col.new .col-h{color:var(--stage-new)}
+  .col.screen .col-h{color:var(--stage-screen)}
+  .col.meeting .col-h{color:var(--stage-meeting)}
+  .col.proposal .col-h{color:var(--stage-proposal)}
+  .col.won .col-h{color:var(--stage-won)}
+  .deal{
+    background:var(--bg-row);border:1px solid var(--line-strong);border-radius:8px;
+    padding:9px 10px;margin-bottom:7px;border-left:3px solid var(--pri-low);
+  }
+  .deal.p1{border-left-color:var(--pri-urgent)}
+  .deal.p2{border-left-color:var(--pri-high)}
+  .deal.p3{border-left-color:var(--pri-med)}
+  .deal .name{font-size:12px;font-weight:600}
+  .deal .co{font-size:10.5px;color:var(--muted);margin-top:2px}
+  .deal .meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:6px}
+  .amt{font-family:var(--font-mono);font-size:10.5px}
+  .pri{
+    font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    padding:2px 6px;border-radius:4px;
+  }
+  .pri.p1{background:color-mix(in srgb, var(--pri-urgent) 18%, transparent);color:var(--pri-urgent)}
+  .pri.p2{background:color-mix(in srgb, var(--pri-high) 16%, transparent);color:var(--pri-high)}
+  .pri.p3{background:color-mix(in srgb, var(--pri-med) 16%, transparent);color:var(--pri-med)}
+  .pri.p4{background:var(--bg-hover);color:var(--muted)}
+
+  /* table */
+  .table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px}
+  .table th{
+    text-align:left;font-size:10px;font-weight:650;color:var(--faint);
+    letter-spacing:.04em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--line);
+  }
+  .table td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  .table tr:hover td{background:var(--bg-hover)}
+  .pill{
+    display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:650;
+    padding:3px 7px;border-radius:999px;background:var(--bg-hover);color:var(--muted);
+  }
+  .pill.ok{background:color-mix(in srgb, var(--ok) 16%, transparent);color:var(--ok)}
+  .pill.warn{background:color-mix(in srgb, var(--warn) 16%, transparent);color:var(--warn)}
+  .pill.danger{background:color-mix(in srgb, var(--danger) 16%, transparent);color:var(--danger)}
+  .pill.accent{background:color-mix(in srgb, var(--accent) 16%, transparent);color:var(--accent)}
+  .avatar{
+    width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+    font-size:9px;font-weight:700;background:var(--brand-bg);color:var(--brand-on);
+  }
+  .avatar.sm{width:18px;height:18px;font-size:8px}
+
+  /* record show */
+  .show{display:grid;grid-template-columns:1fr 280px;gap:14px}
+  .card{background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .card h4{font-size:12px;font-weight:650;margin-bottom:10px}
+  .field{margin-bottom:10px}
+  .field label{display:block;font-size:10px;color:var(--faint);font-weight:650;margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase}
+  .field .val{font-size:13px}
+  .field .val.muted{color:var(--muted)}
+  .timeline .ev{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:12px}
+  .timeline .ev:last-child{border-bottom:0}
+  .timeline .when{font-family:var(--font-mono);font-size:10px;color:var(--faint);width:42px;flex-shrink:0}
+
+  /* tasks */
+  .task{display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg-row);margin-bottom:7px}
+  .check{width:14px;height:14px;border:1.5px solid var(--line-strong);border-radius:4px;flex-shrink:0}
+  .task.done .check{background:var(--ok);border-color:var(--ok)}
+  .task.done .t{text-decoration:line-through;color:var(--muted)}
+
+  /* workflows / agents */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .wf{
+    border:1px solid var(--line);border-radius:10px;background:var(--bg-row);padding:12px;
+  }
+  .wf .title{font-size:13px;font-weight:600}
+  .wf .meta{font-size:11px;color:var(--muted);margin-top:4px}
+  .nodes{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .node{
+    font-family:var(--font-mono);font-size:10px;padding:4px 7px;border-radius:5px;
+    background:var(--bg-hover);border:1px solid var(--line-strong);color:var(--muted);
+  }
+  .node.trigger{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 40%, var(--line-strong))}
+  .arrow{color:var(--faint);font-size:11px}
+
+  /* chat */
+  .chat{display:grid;grid-template-columns:200px 1fr;min-height:360px}
+  .threads{border-right:1px solid var(--line);padding:10px;background:var(--sidebar)}
+  .thread{padding:8px;border-radius:7px;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .thread.on{background:var(--bg-hover);color:var(--text)}
+  .msgs{padding:14px;display:flex;flex-direction:column;gap:10px}
+  .bubble{max-width:85%;padding:10px 12px;border-radius:10px;font-size:12.5px;line-height:1.45}
+  .bubble.user{align-self:flex-end;background:var(--brand-bg);color:var(--brand-on)}
+  .bubble.ai{align-self:flex-start;background:var(--bg-row);border:1px solid var(--line)}
+  .composer{margin-top:auto;display:flex;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+
+  /* settings */
+  .settings{display:grid;grid-template-columns:180px 1fr;min-height:360px}
+  .set-nav{border-right:1px solid var(--line);padding:12px;background:var(--sidebar)}
+  .set-nav a{display:block;padding:7px 8px;border-radius:6px;font-size:12px;color:var(--muted);margin-bottom:2px}
+  .set-nav a.on{background:var(--bg-hover);color:var(--text);font-weight:600}
+  .set-body{padding:16px}
+  .form-row{margin-bottom:12px;max-width:420px}
+  .form-row label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}
+  .form-row input,.form-row textarea{
+    width:100%;background:var(--input);border:1px solid var(--line-strong);border-radius:7px;
+    padding:8px 10px;font-size:12.5px;color:var(--text);
+  }
+  .form-row textarea{min-height:72px;resize:vertical}
+
+  /* auth */
+  .auth{
+    min-height:380px;display:flex;align-items:center;justify-content:center;
+    background:var(--bg);padding:28px;
+  }
+  .auth-card{width:300px;text-align:center}
+  .auth-card .mark{
+    width:48px;height:48px;margin:0 auto 14px;border-radius:10px;
+    background:var(--mark) center/contain no-repeat;
+  }
+  .auth-card h3{font-family:var(--font-mono);font-size:16px;font-weight:500;margin-bottom:6px}
+  .auth-card p{font-size:12px;color:var(--muted);margin-bottom:18px}
+  .auth-card .form-row{text-align:left;max-width:none}
+  .auth-card .btn{width:100%;justify-content:center;margin-top:8px;padding:10px}
+
+  /* command menu */
+  .cmd-wrap{position:relative;min-height:280px;background:var(--bg)}
+  .cmd-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.45)}
+  html[data-theme="paper"] .cmd-backdrop{background:rgba(20,20,20,.28)}
+  .cmd{
+    position:absolute;left:50%;top:18%;transform:translateX(-50%);
+    width:min(480px,92%);background:var(--bg-elev);border:1px solid var(--line-strong);
+    border-radius:12px;overflow:hidden;box-shadow:var(--shadow);
+  }
+  .cmd input{
+    width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;
+    padding:14px 16px;font-size:14px;color:var(--text);outline:none;
+    font-family:var(--font-mono);
+  }
+  .cmd .row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:9px 14px;font-size:12.5px;color:var(--muted);
+  }
+  .cmd .row.on,.cmd .row:hover{background:var(--bg-hover);color:var(--text)}
+  .cmd kbd{
+    font-family:var(--font-mono);font-size:10px;padding:2px 5px;border-radius:4px;
+    border:1px solid var(--line-strong);color:var(--faint);
+  }
+
+  /* primitives strip */
+  .prim{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .prim .card h4{margin-bottom:12px}
+  .prim .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+  .swatch{width:28px;height:28px;border-radius:6px;border:1px solid var(--line-strong)}
+  .tok{font-family:var(--font-mono);font-size:10px;color:var(--faint)}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:900px){
+    .app,.chat,.settings,.show,.board,.prim,.two,.grid2{grid-template-columns:1fr}
+    .board{grid-template-columns:repeat(2,1fr)}
+  }
+
+  .foot-note{
+    margin-top:20px;padding:14px 16px;border:1px dashed var(--line-strong);border-radius:10px;
+    font-size:12.5px;color:var(--muted);line-height:1.5;
+  }
+</style>
+</head>
+<body>
+  <div class="kit-bar">
+    <div class="kit-brand">
+      <span class="mark" aria-hidden="true"></span>
+      <span class="word">mainframe_digital</span>
+      <span class="sub">CRM UI Kit · 01 Night + 02 Paper</span>
+    </div>
+    <nav class="kit-nav">
+      <a href="#tokens">Tokens</a>
+      <a href="#auth">Auth</a>
+      <a href="#opps">Opportunities</a>
+      <a href="#people">People</a>
+      <a href="#companies">Companies</a>
+      <a href="#tasks">Tasks</a>
+      <a href="#record">Record</a>
+      <a href="#workflows">Workflows</a>
+      <a href="#agents">Agents</a>
+      <a href="#chat">AI Chat</a>
+      <a href="#settings">Settings</a>
+      <a href="#cmd">Command</a>
+    </nav>
+    <div class="theme-toggle" role="group" aria-label="Theme">
+      <button type="button" id="btn-night" class="on" onclick="setTheme('night')">01 Night</button>
+      <button type="button" id="btn-paper" onclick="setTheme('paper')">02 Paper</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <header class="intro">
+      <h1>Entire UI kit — <em>same system, two skins</em></h1>
+      <p>Toggle 01 Terminal Night and 02 Paper Desk. Every screen below shares Mainframe branding, deal name + company hierarchy, and colour-coded stages / priority. Built for Twenty routes: objects, record show, workflows, agents, chat, settings.</p>
+    </header>
+
+    <!-- TOKENS -->
+    <section class="section" id="tokens">
+      <div class="section-h"><span class="n">00</span><h2>Foundations</h2><span class="d">colour, type, controls</span></div>
+      <div class="prim">
+        <div class="card">
+          <h4>Brand & surfaces</h4>
+          <div class="row">
+            <span class="swatch" style="background:var(--bg)"></span>
+            <span class="swatch" style="background:var(--bg-elev)"></span>
+            <span class="swatch" style="background:var(--bg-row)"></span>
+            <span class="swatch" style="background:var(--brand-bg)"></span>
+            <span class="swatch" style="background:var(--accent)"></span>
+          </div>
+          <p class="tok">bg · elev · row · brand · accent</p>
+        </div>
+        <div class="card">
+          <h4>Stage / priority</h4>
+          <div class="row">
+            <span class="swatch" style="background:var(--stage-new)"></span>
+            <span class="swatch" style="background:var(--stage-screen)"></span>
+            <span class="swatch" style="background:var(--stage-meeting)"></span>
+            <span class="swatch" style="background:var(--stage-proposal)"></span>
+            <span class="swatch" style="background:var(--stage-won)"></span>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <span class="pri p1">Urgent</span>
+            <span class="pri p2">High</span>
+            <span class="pri p3">Med</span>
+            <span class="pri p4">Low</span>
+          </div>
+        </div>
+        <div class="card">
+          <h4>Controls</h4>
+          <div class="row">
+            <span class="btn primary">Primary</span>
+            <span class="btn ghost">Ghost</span>
+            <span class="btn danger sm">Danger</span>
+          </div>
+          <div class="row">
+            <span class="search">Search…</span>
+            <span class="pill accent">Active</span>
+            <span class="avatar">BD</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AUTH -->
+    <section class="section" id="auth">
+      <div class="section-h"><span class="n">01</span><h2>Sign in</h2><span class="d">/welcome</span></div>
+      <div class="frame">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">crm.mainframedigital.co.nz/welcome</span></div>
+        <div class="auth">
+          <div class="auth-card">
+            <div class="mark"></div>
+            <h3>mainframe_digital</h3>
+            <p>Sign in to your workspace</p>
+            <div class="form-row"><label>Email</label><input value="ben@mainframedigital.co.nz" readonly></div>
+            <div class="form-row"><label>Password</label><input type="password" value="••••••••••" readonly></div>
+            <span class="btn primary">Continue</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- OPPORTUNITIES -->
+    <section class="section" id="opps">
+      <div class="section-h"><span class="n">02</span><h2>Opportunities</h2><span class="d">/objects/opportunities · kanban</span></div>
+      <div class="frame">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/objects/opportunities</span></div>
+        <div class="app">
+          <aside class="side">
+            <div class="ws"><span class="mark"></span><span class="ws-name">mainframe_digital</span><span class="chev">⌄</span></div>
+            <a class="item" href="#cmd"><span class="ico">⌕</span>Search<span class="sk">⌘K</span></a>
+            <div class="group">Favorites</div>
+            <a href="#record"><span class="fav-ico"></span>Ops automation pack</a>
+            <div class="group">Workspace</div>
+            <a href="#people"><span class="ico">◦</span>People</a>
+            <a href="#companies"><span class="ico">▣</span>Companies</a>
+            <a class="on" href="#opps"><span class="ico">◈</span>Opportunities</a>
+            <a href="#tasks"><span class="ico">☑</span>Tasks</a>
+            <a href="#"><span class="ico">✎</span>Notes</a>
+            <a href="#"><span class="ico">▦</span>Dashboards</a>
+            <div class="group">Apps</div>
+            <a href="#workflows"><span class="ico">⚙</span>Workflows</a>
+            <a href="#agents"><span class="ico">⬡</span>Agents</a>
+            <a href="#chat"><span class="ico">✦</span>AI Chat</a>
+            <div class="foot"><a href="#settings"><span class="ico">⚙</span>Settings</a></div>
+          </aside>
+          <div class="main">
+            <div class="viewbar">
+              <span class="view-title">All Opportunities <span class="chev">⌄</span></span>
+              <span class="vbtn">Filter</span>
+              <span class="vbtn">Sort</span>
+              <span class="vbtn">Options ⌄</span>
+              <span class="spacer"></span>
+              <span class="search">Search deals… ⌘K</span>
+              <span class="btn primary sm">+ New record</span>
+            </div>
+            <div class="board">
+              <div class="col new">
+                <div class="col-h">New <span class="n">2</span><span class="col-tools"><span class="col-add">+</span><span class="col-kebab">⋯</span></span></div>
+                <div class="deal p3"><div class="name">Website rebuild</div><div class="co">Colon Care Centre</div><div class="meta"><span class="amt">$18k</span><span class="pri p3">Med</span></div></div>
+                <div class="deal"><div class="name">Inbound — form lead</div><div class="co">Northside Tutoring</div><div class="meta"><span class="amt">—</span><span class="pri p4">Low</span></div></div>
+              </div>
+              <div class="col screen">
+                <div class="col-h">Screening <span class="n">1</span><span class="col-tools"><span class="col-add">+</span><span class="col-kebab">⋯</span></span></div>
+                <div class="deal p2"><div class="name">CRM rollout</div><div class="co">Auckland Music Academy</div><div class="meta"><span class="amt">$42k</span><span class="pri p2">High</span></div></div>
+              </div>
+              <div class="col meeting">
+                <div class="col-h">Meeting <span class="n">2</span><span class="col-tools"><span class="col-add">+</span><span class="col-kebab">⋯</span></span></div>
+                <div class="deal p1"><div class="name">Property AI briefing</div><div class="co">Whitfield Plumbing</div><div class="meta"><span class="amt">$65k</span><span class="pri p1">Urgent</span></div></div>
+                <div class="deal p2"><div class="name">Lead capture agent</div><div class="co">Southern Cross Landscaping</div><div class="meta"><span class="amt">$28k</span><span class="pri p2">High</span></div></div>
+              </div>
+              <div class="col proposal">
+                <div class="col-h">Proposal <span class="n">1</span><span class="col-tools"><span class="col-add">+</span><span class="col-kebab">⋯</span></span></div>
+                <div class="deal p1"><div class="name">Ops automation pack</div><div class="co">HazardCo</div><div class="meta"><span class="amt">$90k</span><span class="pri p1">Urgent</span></div></div>
+              </div>
+              <div class="col won">
+                <div class="col-h">Customer <span class="n">1</span><span class="col-tools"><span class="col-add">+</span><span class="col-kebab">⋯</span></span></div>
+                <div class="deal"><div class="name">Retainer — growth</div><div class="co">IDJS</div><div class="meta"><span class="amt">$12k/mo</span><span class="pri p4">Won</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PEOPLE -->
+    <section class="section" id="people">
+      <div class="section-h"><span class="n">03</span><h2>People</h2><span class="d">/objects/people · table</span></div>
+      <div class="frame">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/objects/people</span></div>
+        <div class="app">
+          <aside class="side">
+            <div class="ws"><span class="mark"></span><span class="ws-name">mainframe_digital</span><span class="chev">⌄</span></div>
+            <a class="item" href="#cmd"><span class="ico">⌕</span>Search<span class="sk">⌘K</span></a>
+            <div class="group">Favorites</div>
+            <a href="#record"><span class="fav-ico"></span>Ops automation pack</a>
+            <div class="group">Workspace</div>
+            <a class="on" href="#people"><span class="ico">◦</span>People</a>
+            <a href="#companies"><span class="ico">▣</span>Companies</a>
+            <a href="#opps"><span class="ico">◈</span>Opportunities</a>
+            <a href="#tasks"><span class="ico">☑</span>Tasks</a>
+            <a href="#"><span class="ico">✎</span>Notes</a>
+            <a href="#"><span class="ico">▦</span>Dashboards</a>
+            <div class="foot"><a href="#settings"><span class="ico">⚙</span>Settings</a></div>
+          </aside>
+          <div class="main">
+            <div class="viewbar">
+              <span class="view-title">All People <span class="chev">⌄</span></span>
+              <span class="vbtn">Filter</span>
+              <span class="vbtn">Sort</span>
+              <span class="vbtn">Options ⌄</span>
+              <span class="spacer"></span>
+              <span class="search">Search people… ⌘K</span>
+              <span class="btn primary sm">+ New record</span>
+            </div>
+            <table class="table">
+              <thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Job</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><span class="avatar sm" style="margin-right:8px">MR</span> Marcus Reid</td>
+                  <td class="mono" style="font-size:11px;color:var(--muted)">Auckland Music Academy</td>
+                  <td style="color:var(--muted)">marcus@…</td>
+                  <td>Owner</td>
+                  <td><span class="pill accent">Open deal</span></td>
+                </tr>
+                <tr>
+                  <td><span class="avatar sm" style="margin-right:8px">SW</span> Sarah Whitfield</td>
+                  <td class="mono" style="font-size:11px;color:var(--muted)">Whitfield Plumbing</td>
+                  <td style="color:var(--muted)">sarah@…</td>
+                  <td>Director</td>
+                  <td><span class="pill danger">Urgent</span></td>
+                </tr>
+                <tr>
+                  <td><span class="avatar sm" style="margin-right:8px">PS</span> Priya Sharma</td>
+                  <td class="mono" style="font-size:11px;color:var(--muted)">Southern Cross Landscaping</td>
+                  <td style="color:var(--muted)">priya@…</td>
+                  <td>Ops lead</td>
+                  <td><span class="pill">Customer</span></td>
+                </tr>
+                <tr>
+                  <td><span class="avatar sm" style="margin-right:8px">JD</span> Jordan Mete</td>
+                  <td class="mono" style="font-size:11px;color:var(--muted)">—</td>
+                  <td style="color:var(--muted)">jordan@…</td>
+                  <td>Candidate</td>
+                  <td><span class="pill warn">Screening</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPANIES -->
+    <section class="section" id="companies">
+      <div class="section-h"><span class="n">04</span><h2>Companies</h2><span class="d">/objects/companies</span></div>
+      <div class="frame">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/objects/companies</span></div>
+        <div class="app">
+          <aside class="side">
+            <div class="ws"><span class="mark"></span><span class="ws-name">mainframe_digital</span><span class="chev">⌄</span></div>
+            <a class="item" href="#cmd"><span class="ico">⌕</span>Search<span class="sk">⌘K</span></a>
+            <div class="group">Favorites</div>
+            <a href="#record"><span class="fav-ico"></span>Ops automation pack</a>
+            <div class="group">Workspace</div>
+            <a href="#people"><span class="ico">◦</span>People</a>
+            <a class="on" href="#companies"><span class="ico">▣</span>Companies</a>
+            <a href="#opps"><span class="ico">◈</span>Opportunities</a>
+            <a href="#tasks"><span class="ico">☑</span>Tasks</a>
+            <a href="#"><span class="ico">✎</span>Notes</a>
+            <a href="#"><span class="ico">▦</span>Dashboards</a>
+            <div class="foot"><a href="#settings"><span class="ico">⚙</span>Settings</a></div>
+          </aside>
+          <div class="main">
+            <div class="viewbar">
+              <span class="view-title">All Companies <span class="chev">⌄</span></span>
+              <span class="vbtn">Filter</span>
+              <span class="vbtn">Sort</span>
+              <span class="vbtn">Options ⌄</span>
+              <span class="spacer"></span>
+              <span class="search">Search companies… ⌘K</span>
+              <span class="btn primary sm">+ New record</span>
+            </div>
+            <table class="table">
+              <thead><tr><th>Company</th><th>Domain</th><th>People</th><th>ARR / pipe</th><th>Stage</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:600">HazardCo</td>
+                  <td class="mono" style="font-size:11px;color:var(--muted)">hazardco.com</td>
+                  <td>4</td>
+                  <td class="mono">$90k</td>
+                  <td><span class="pill danger">Proposal</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Whitfield Plumbing</td>
+                  <td class="mono" style="font-size:11px;color:var(--muted)">whitfieldplumbing.co.nz</td>
+                  <td>2</td>
+                  <td class="mono">$65k</td>
+                  <td><span class="pill warn">Meeting</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">IDJS</td>
+                  <td class="mono" style="font-size:11px;color:var(--muted)">idjs.co.nz</td>
+                  <td>6</td>
+                  <td class="mono">$12k/mo</td>
+                  <td><span class="pill ok">Customer</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Colon Care Centre</td>
+                  <td class="mono" style="font-size:11px;color:var(--muted)">coloncare.nz</td>
+                  <td>1</td>
+                  <td class="mono">$18k</td>
+                  <td><span class="pill">New</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TASKS -->
+    <section class="section" id="tasks">
+      <div class="section-h"><span class="n">05</span><h2>Tasks</h2><span class="d">/objects/tasks</span></div>
+      <div class="frame">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/objects/tasks</span></div>
+        <div class="app">
+          <aside class="side">
+            <div class="ws"><span class="mark"></span><span class="ws-name">mainframe_digital</span><span class="chev">⌄</span></div>
+            <a class="item" href="#cmd"><span class="ico">⌕</span>Search<span class="sk">⌘K</span></a>
+            <div class="group">Workspace</div>
+            <a href="#people"><span class="ico">◦</span>People</a>
+            <a href="#companies"><span class="ico">▣</span>Companies</a>
+            <a href="#opps"><span class="ico">◈</span>Opportunities</a>
+            <a class="on" href="#tasks"><span class="ico">☑</span>Tasks</a>
+            <a href="#"><span class="ico">✎</span>Notes</a>
+            <a href="#"><span class="ico">▦</span>Dashboards</a>
+            <div class="foot"><a href="#settings"><span class="ico">⚙</span>Settings</a></div>
+          </aside>
+          <div class="main">
+            <div class="viewbar">
+              <span class="view-title">All Tasks <span class="chev">⌄</span></span>
+              <span class="vbtn">Filter · Due this week</span>
+              <span class="vbtn">Sort</span>
+              <span class="vbtn">Options ⌄</span>
+              <span class="spacer"></span>
+              <span class="btn primary sm">+ New record</span>
+            </div>
+            <div class="task">
+              <span class="check"></span>
+              <div style="flex:1">
+                <div class="t" style="font-size:13px;font-weight:600">Send HazardCo proposal PDF</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Ops automation pack · HazardCo</div>
+              </div>
+              <span class="pill danger">Today</span>
+              <span class="avatar sm">BD</span>
+            </div>
+            <div class="task">
+              <span class="check"></span>
+              <div style="flex:1">
+                <div class="t" style="font-size:13px;font-weight:600">Book Steph into Tuesday demo</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">Property AI briefing · Whitfield Plumbing</div>
+              </div>
+              <span class="pill warn">Tomorrow</span>
+              <span class="avatar sm">BD</span>
+            </div>
+            <div class="task done">
+              <span class="check"></span>
+              <div style="flex:1">
+                <div class="t" style="font-size:13px;font-weight:600">Research Auckland Music Academy</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">CRM rollout</div>
+              </div>
+              <span class="pill ok">Done</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RECORD -->
+    <section class="section" id="record">
+      <div class="section-h"><span class="n">06</span><h2>Record detail</h2><span class="d">/object/opportunity/:id</span></div>
+      <div class="frame">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/object/opportunity/8f2a…</span></div>
+        <div class="app">
+          <aside class="side">
+            <div class="ws"><span class="mark"></span><span class="ws-name">mainframe_digital</span><span class="chev">⌄</span></div>
+            <a class="item" href="#cmd"><span class="ico">⌕</span>Search<span class="sk">⌘K</span></a>
+            <div class="group">Favorites</div>
+            <a class="on" href="#record"><span class="fav-ico"></span>Ops automation pack</a>
+            <div class="group">Workspace</div>
+            <a href="#people"><span class="ico">◦</span>People</a>
+            <a href="#companies"><span class="ico">▣</span>Companies</a>
+            <a href="#opps"><span class="ico">◈</span>Opportunities</a>
+            <a href="#tasks"><span class="ico">☑</span>Tasks</a>
+            <div class="foot"><a href="#settings"><span class="ico">⚙</span>Settings</a></div>
+          </aside>
+          <div class="main">
+            <div class="top">
+              <div>
+                <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Opportunity</div>
+                <h3>Ops automation pack</h3>
+                <div style="font-size:12.5px;color:var(--muted);margin-top:4px">HazardCo · <span class="pill danger" style="margin-left:4px">Urgent</span> <span class="pill" style="margin-left:4px">Proposal</span></div>
+              </div>
+              <div class="actions">
+                <span class="btn ghost sm">Note</span>
+                <span class="btn ghost sm">Task</span>
+                <span class="btn primary sm">Move stage</span>
+              </div>
+            </div>
+            <div class="show">
+              <div>
+                <div class="card" style="margin-bottom:10px">
+                  <h4>Fields</h4>
+                  <div class="grid2">
+                    <div class="field"><label>Amount</label><div class="val mono">$90,000</div></div>
+                    <div class="field"><label>Close date</label><div class="val">28 Nov 2026</div></div>
+                    <div class="field"><label>Company</label><div class="val">HazardCo</div></div>
+                    <div class="field"><label>Point of contact</label><div class="val">Alex Nguyen</div></div>
+                    <div class="field" style="grid-column:1/-1"><label>Next step</label><div class="val muted">Send signed SOW + implementation timeline</div></div>
+                  </div>
+                </div>
+                <div class="card">
+                  <h4>Activity</h4>
+                  <div class="timeline">
+                    <div class="ev"><span class="when">10:14</span><div><strong>Note</strong> — Alex asked for 90-day pilot pricing.</div></div>
+                    <div class="ev"><span class="when">Yest</span><div><strong>Email</strong> — Proposal v2 sent to alex@hazardco.com</div></div>
+                    <div class="ev"><span class="when">Mon</span><div><strong>Call</strong> — 32 min · warm, wants ops lead in next meeting</div></div>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="card" style="margin-bottom:10px">
+                  <h4>Priority</h4>
+                  <span class="pri p1">Urgent</span>
+                  <p style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.45">High dollar, decision this month. Left stripe matches board card.</p>
+                </div>
+                <div class="card">
+                  <h4>Owner</h4>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span class="avatar">BD</span>
+                    <div>
+                      <div style="font-size:12.5px;font-weight:600">Ben</div>
+                      <div style="font-size:11px;color:var(--muted)">mainframe_digital</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORKFLOWS + AGENTS -->
+    <div class="two">
+      <section class="section" id="workflows">
+        <div class="section-h"><span class="n">07</span><h2>Workflows</h2><span class="d">/workflows</span></div>
+        <div class="frame">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/workflows</span></div>
+          <div class="main" style="min-height:300px">
+            <div class="top">
+              <div class="brand" style="font-family:var(--font-mono);font-size:12px;display:flex;gap:8px;align-items:center">
+                <span class="mark" style="width:20px;height:20px;border-radius:4px;background:var(--mark) center/contain no-repeat;display:inline-block"></span>
+                Workflows
+              </div>
+              <span class="btn primary sm">+ Workflow</span>
+            </div>
+            <div class="wf" style="margin-bottom:8px">
+              <div class="title">New deal → Slack + task</div>
+              <div class="meta">When opportunity created in Meeting</div>
+              <div class="nodes">
+                <span class="node trigger">trigger</span><span class="arrow">→</span>
+                <span class="node">create task</span><span class="arrow">→</span>
+                <span class="node">notify</span>
+              </div>
+            </div>
+            <div class="wf">
+              <div class="title">Urgent proposal nudges</div>
+              <div class="meta">Daily · priority = Urgent & stage = Proposal</div>
+              <div class="nodes">
+                <span class="node trigger">cron</span><span class="arrow">→</span>
+                <span class="node">filter</span><span class="arrow">→</span>
+                <span class="node">email owner</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="agents">
+        <div class="section-h"><span class="n">08</span><h2>Agents</h2><span class="d">/agents</span></div>
+        <div class="frame">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/agents</span></div>
+          <div class="main" style="min-height:300px">
+            <div class="top">
+              <h3 style="font-size:15px">Agents</h3>
+              <span class="btn primary sm">+ Agent</span>
+            </div>
+            <div class="wf" style="margin-bottom:8px">
+              <div class="title">Deal brief writer</div>
+              <div class="meta">Reads company + notes → one-pager before meetings</div>
+              <div style="margin-top:8px"><span class="pill accent">Active</span></div>
+            </div>
+            <div class="wf">
+              <div class="title">Follow-up drafter</div>
+              <div class="meta">Drafts email from last activity on Urgent deals</div>
+              <div style="margin-top:8px"><span class="pill">Draft</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- AI CHAT -->
+    <section class="section" id="chat">
+      <div class="section-h"><span class="n">09</span><h2>AI Chat</h2><span class="d">/chat</span></div>
+      <div class="frame">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/chat</span></div>
+        <div class="chat">
+          <div class="threads">
+            <div class="brand" style="font-family:var(--font-mono);font-size:11px;display:flex;gap:8px;align-items:center;padding:4px 4px 12px">
+              <span class="mark" style="width:18px;height:18px;border-radius:4px;background:var(--mark) center/contain no-repeat;display:inline-block"></span>
+              Inbox
+            </div>
+            <div class="thread on">HazardCo proposal help</div>
+            <div class="thread">Whitfield prep</div>
+            <div class="thread">Pipeline summary</div>
+          </div>
+          <div class="msgs">
+            <div class="bubble user">Summarise why Ops automation pack is Urgent and what I should send next.</div>
+            <div class="bubble ai">
+              <strong>Ops automation pack · HazardCo</strong> — $90k, Proposal, close 28 Nov.<br><br>
+              Urgent because decision lands this month and ops lead is not yet in the room. Next: send SOW + 90-day pilot pricing Alex asked for yesterday.
+            </div>
+            <div class="composer">
+              <span class="search" style="flex:1">Ask about a deal…</span>
+              <span class="btn primary sm">Send</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="section" id="settings">
+      <div class="section-h"><span class="n">10</span><h2>Settings</h2><span class="d">/settings/general</span></div>
+      <div class="frame">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/settings/general</span></div>
+        <div class="settings">
+          <nav class="set-nav">
+            <a class="on" href="#settings">General</a>
+            <a href="#settings">Members</a>
+            <a href="#settings">Experience</a>
+            <a href="#settings">Objects</a>
+            <a href="#settings">AI</a>
+            <a href="#settings">Billing</a>
+          </nav>
+          <div class="set-body">
+            <h3 style="font-size:16px;font-weight:650;margin-bottom:14px">General</h3>
+            <div class="form-row">
+              <label>Workspace name</label>
+              <input value="mainframe_digital" readonly>
+            </div>
+            <div class="form-row">
+              <label>Logo</label>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span class="mark" style="width:40px;height:40px;border-radius:8px;border:1px solid var(--line);background:var(--mark) center/contain no-repeat;display:inline-block"></span>
+                <span class="btn ghost sm">Replace</span>
+              </div>
+            </div>
+            <div class="form-row">
+              <label>Default theme</label>
+              <div class="theme-toggle" style="width:fit-content">
+                <button type="button" class="on" style="pointer-events:none">01 Night</button>
+                <button type="button" style="pointer-events:none">02 Paper</button>
+              </div>
+            </div>
+            <span class="btn primary" style="margin-top:4px">Save</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMMAND MENU -->
+    <section class="section" id="cmd">
+      <div class="section-h"><span class="n">11</span><h2>Command menu</h2><span class="d">⌘K</span></div>
+      <div class="frame">
+        <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">overlay</span></div>
+        <div class="cmd-wrap">
+          <div class="cmd-backdrop"></div>
+          <div class="cmd">
+            <input value="hazard" readonly>
+            <div class="row on"><span>Ops automation pack · HazardCo</span><kbd>↵</kbd></div>
+            <div class="row"><span>Go to Opportunities</span><kbd>O</kbd></div>
+            <div class="row"><span>Create task</span><kbd>T</kbd></div>
+            <div class="row"><span>Switch theme</span><kbd>D</kbd></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <p class="foot-note">
+      Dual theme kit for Mainframe CRM on Twenty — chrome now mirrors the real Twenty app (workspace switcher, ⌘K search, Favorites, Workspace object order, view bar with Filter / Sort / Options + New record, per-column quick-add). Toggle <strong>01 Night</strong> / <strong>02 Paper</strong> in the top bar.
+      Next step when you say go: wire these tokens into <code style="font-family:var(--font-mono);color:var(--accent)">twenty-front</code> theme / workspace experience (not just mockups).
+    </p>
+  </div>
+
+  <script>
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('btn-night').classList.toggle('on', theme === 'night');
+      document.getElementById('btn-paper').classList.toggle('on', theme === 'paper');
+      try { localStorage.setItem('mf-crm-theme', theme); } catch (e) {}
+    }
+    try {
+      const saved = localStorage.getItem('mf-crm-theme');
+      if (saved === 'night' || saved === 'paper') setTheme(saved);
+    } catch (e) {}
+  </script>
+</body>
+</html>

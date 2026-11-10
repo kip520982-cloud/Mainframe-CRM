@@ -1,0 +1,266 @@
+import { BadRequestException, Inject } from '@nestjs/common';
+import { SettingsPath } from 'twenty-shared/types';
+import {
+  assertIsDefinedOrThrow,
+  getSettingsPath,
+  isDefined,
+} from 'twenty-shared/utils';
+
+import { CommonSelectFieldsBuilder } from 'src/engine/api/common/common-select-fields/common-select-fields-builder';
+import { SelectionDepth } from 'src/engine/api/common/common-select-fields/types/selection-depth.type';
+import { CommonGroupByOutputItem } from 'src/engine/api/common/types/common-group-by-output-item.type';
+import { CommonSelectedFields } from 'src/engine/api/common/types/common-selected-fields-result.type';
+import { REST_API_DEFAULT_MAX_FIELDS } from 'src/engine/api/rest/input-request-parsers/constants/rest-api-default-max-fields.constant';
+import { parseCorePath } from 'src/engine/api/rest/input-request-parsers/path-parser-utils/parse-core-path.utils';
+import { AuthenticatedRequest } from 'src/engine/api/rest/types/authenticated-request.type';
+import { ActorFromAuthContextService } from 'src/engine/core-modules/actor/services/actor-from-auth-context.service';
+import { getWorkspaceAuthContext } from 'src/engine/core-modules/auth/storage/workspace-auth-context.storage';
+import { AccessTokenService } from 'src/engine/core-modules/auth/token/services/access-token.service';
+import { WorkspaceAuthContext } from 'src/engine/core-modules/auth/types/workspace-auth-context.type';
+import { WorkspaceDomainsService } from 'src/engine/core-modules/domain/workspace-domains/services/workspace-domains.service';
+import { FeatureFlagService } from 'src/engine/core-modules/feature-flag/services/feature-flag.service';
+import { WorkspaceNotFoundDefaultError } from 'src/engine/core-modules/workspace/workspace.exception';
+import { WorkspaceManyOrAllFlatEntityMapsCacheService } from 'src/engine/metadata-modules/flat-entity/services/workspace-many-or-all-flat-entity-maps-cache.service';
+import { type FlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/types/flat-entity-maps.type';
+import { findFlatEntityByIdInFlatEntityMaps } from 'src/engine/metadata-modules/flat-entity/utils/find-flat-entity-by-id-in-flat-entity-maps.util';
+import { type OrmFlatFieldMetadata } from 'src/engine/metadata-modules/flat-field-metadata/types/orm-flat-field-metadata.type';
+import { type FlatIndexMetadata } from 'src/engine/metadata-modules/flat-index-metadata/types/flat-index-metadata.type';
+import { type FlatObjectMetadata } from 'src/engine/metadata-modules/flat-object-metadata/types/flat-object-metadata.type';
+import { buildObjectIdByNameMaps } from 'src/engine/metadata-modules/flat-object-metadata/utils/build-object-id-by-name-maps.util';
+import { WorkspaceCacheStorageService } from 'src/engine/workspace-cache-storage/workspace-cache-storage.service';
+import { WorkspaceCacheService } from 'src/engine/workspace-cache/services/workspace-cache.service';
+
+export interface PageInfo {
+  hasNextPage?: boolean;
+  hasPreviousPage?: boolean;
+  startCursor: string | null;
+  endCursor: string | null;
+}
+
+export interface FormatResult {
+  data?: {
+    [operation: string]: object;
+  };
+  pageInfo?: PageInfo;
+  totalCount?: number;
+}
+
+export abstract class RestApiBaseHandler {
+  @Inject()
+  protected readonly workspaceCacheService: WorkspaceCacheService;
+  @Inject()
+  protected readonly actorFromAuthContextService: ActorFromAuthContextService;
+  @Inject()
+  protected readonly workspaceCacheStorageService: WorkspaceCacheStorageService;
+  @Inject()
+  protected readonly workspaceManyOrAllFlatEntityMapsCacheService: WorkspaceManyOrAllFlatEntityMapsCacheService;
+  @Inject()
+  protected readonly commonSelectFieldsBuilder: CommonSelectFieldsBuilder;
+  @Inject()
+  protected readonly accessTokenService: AccessTokenService;
+  @Inject()
+  protected readonly workspaceDomainsService: WorkspaceDomainsService;
+  @Inject()
+  protected readonly featureFlagService: FeatureFlagService;
+
+  protected abstract handle(
+    request: AuthenticatedRequest,
+  ): Promise<
+    FormatResult | { data: FormatResult[] } | CommonGroupByOutputItem[]
+  >;
+
+  async computeSelectedFields({
+    authContext,
+    depth,
+    flatObjectMetadata,
+    flatObjectMetadataMaps,
+    flatFieldMetadataMaps,
+  }: {
+    authContext: WorkspaceAuthContext;
+    depth?: SelectionDepth | undefined;
+    flatObjectMetadata: FlatObjectMetadata;
+    flatObjectMetadataMaps: FlatEntityMaps<FlatObjectMetadata>;
+    flatFieldMetadataMaps: FlatEntityMaps<OrmFlatFieldMetadata>;
+  }): Promise<CommonSelectedFields> {
+    const { readableObjectMetadataIds, unreadableFieldMetadataIds } =
+      await this.commonSelectFieldsBuilder.findObjectSelectionMetadataIdsOrThrow(
+        {
+          authContext,
+          objectMetadataId: flatObjectMetadata.id,
+          flatObjectMetadataMaps,
+          shouldIncludeRelationTargets: isDefined(depth) && depth > 0,
+        },
+      );
+
+    const { selectedFields } = this.commonSelectFieldsBuilder.buildFromDepth({
+      readableObjectMetadataIds,
+      unreadableFieldMetadataIds,
+      flatObjectMetadataMaps,
+      flatFieldMetadataMaps,
+      flatObjectMetadata,
+      depth,
+    });
+
+    return selectedFields;
+  }
+
+  async computeRecordSelectedFields({
+    requestedFields,
+    authContext,
+    depth,
+    flatObjectMetadata,
+    flatObjectMetadataMaps,
+    flatFieldMetadataMaps,
+  }: {
+    requestedFields?: ReadonlySet<string>;
+    authContext: WorkspaceAuthContext;
+    depth?: SelectionDepth | undefined;
+    flatObjectMetadata: FlatObjectMetadata;
+    flatObjectMetadataMaps: FlatEntityMaps<FlatObjectMetadata>;
+    flatFieldMetadataMaps: FlatEntityMaps<OrmFlatFieldMetadata>;
+  }): Promise<{
+    selectedFields: CommonSelectedFields;
+  }> {
+    const { readableObjectMetadataIds, unreadableFieldMetadataIds } =
+      await this.commonSelectFieldsBuilder.findObjectSelectionMetadataIdsOrThrow(
+        {
+          authContext,
+          objectMetadataId: flatObjectMetadata.id,
+          flatObjectMetadataMaps,
+          shouldIncludeRelationTargets: isDefined(depth) && depth > 0,
+        },
+      );
+
+    return this.commonSelectFieldsBuilder.buildFromDepth({
+      readableObjectMetadataIds,
+      unreadableFieldMetadataIds,
+      flatObjectMetadataMaps,
+      flatFieldMetadataMaps,
+      flatObjectMetadata,
+      depth,
+      requestedFields,
+      maximumDefaultFieldCount: REST_API_DEFAULT_MAX_FIELDS,
+    });
+  }
+
+  async buildCommonOptions(request: AuthenticatedRequest) {
+    const { object: parsedObject } = parseCorePath(request);
+
+    const {
+      flatObjectMetadata,
+      flatObjectMetadataMaps,
+      flatFieldMetadataMaps,
+      flatIndexMaps,
+      objectIdByNameSingular,
+    } = await this.getObjectMetadata(request, parsedObject);
+
+    const authContext = getWorkspaceAuthContext();
+
+    return {
+      authContext,
+      flatObjectMetadata,
+      flatObjectMetadataMaps,
+      flatFieldMetadataMaps,
+      flatIndexMaps,
+      objectIdByNameSingular,
+    };
+  }
+
+  private async getObjectMetadata(
+    request: AuthenticatedRequest,
+    parsedObject: string,
+  ): Promise<{
+    flatObjectMetadata: FlatObjectMetadata;
+    flatObjectMetadataMaps: FlatEntityMaps<FlatObjectMetadata>;
+    flatFieldMetadataMaps: FlatEntityMaps<OrmFlatFieldMetadata>;
+    flatIndexMaps: FlatEntityMaps<FlatIndexMetadata>;
+    objectIdByNameSingular: Record<string, string>;
+  }> {
+    const { workspace } =
+      await this.accessTokenService.validateTokenByRequest(request);
+
+    assertIsDefinedOrThrow(workspace, WorkspaceNotFoundDefaultError);
+
+    const currentCacheVersion =
+      await this.workspaceCacheStorageService.getMetadataVersion(workspace.id);
+
+    if (currentCacheVersion === undefined) {
+      if (isDefined(workspace.metadataVersion)) {
+        await this.workspaceCacheStorageService.setMetadataVersion(
+          workspace.id,
+          workspace.metadataVersion,
+        );
+      } else {
+        throw new BadRequestException(
+          'Workspace metadata version not found in database',
+        );
+      }
+    }
+
+    const {
+      flatObjectMetadataMaps,
+      flatFieldMetadataMapsOrm: flatFieldMetadataMaps,
+      flatIndexMaps,
+    } = await this.workspaceManyOrAllFlatEntityMapsCacheService.getOrRecomputeManyOrAllFlatEntityMaps(
+      {
+        workspaceId: workspace.id,
+        flatMapsKeys: [
+          'flatObjectMetadataMaps',
+          'flatFieldMetadataMapsOrm',
+          'flatIndexMaps',
+        ],
+      },
+    );
+
+    if (!isDefined(flatObjectMetadataMaps)) {
+      throw new BadRequestException(
+        `No object was found for the workspace associated with this API key. You may generate a new one here ${this.workspaceDomainsService
+          .buildWorkspaceURL({
+            workspace,
+            pathname: getSettingsPath(SettingsPath.Developers),
+          })
+          .toString()}`,
+      );
+    }
+
+    const { idByNameSingular, idByNamePlural } = buildObjectIdByNameMaps(
+      flatObjectMetadataMaps,
+    );
+
+    const objectId = idByNamePlural[parsedObject];
+    const flatObjectMetadataItem = objectId
+      ? findFlatEntityByIdInFlatEntityMaps({
+          flatEntityId: objectId,
+          flatEntityMaps: flatObjectMetadataMaps,
+        })
+      : undefined;
+
+    if (!flatObjectMetadataItem) {
+      const wrongObjectId = idByNameSingular[parsedObject];
+      const wrongFlatObjectMetadataItem = wrongObjectId
+        ? findFlatEntityByIdInFlatEntityMaps({
+            flatEntityId: wrongObjectId,
+            flatEntityMaps: flatObjectMetadataMaps,
+          })
+        : undefined;
+
+      let hint = 'eg: companies';
+
+      if (wrongFlatObjectMetadataItem) {
+        hint = `Did you mean '${wrongFlatObjectMetadataItem.namePlural}'?`;
+      }
+
+      throw new BadRequestException(
+        `object '${parsedObject}' not found. ${hint}`,
+      );
+    }
+
+    return {
+      flatObjectMetadata: flatObjectMetadataItem,
+      flatObjectMetadataMaps,
+      flatFieldMetadataMaps,
+      flatIndexMaps,
+      objectIdByNameSingular: idByNameSingular,
+    };
+  }
+}

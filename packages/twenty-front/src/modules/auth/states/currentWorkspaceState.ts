@@ -1,0 +1,73 @@
+import { createAtomState } from '@/ui/utilities/state/jotai/utils/createAtomState';
+import {
+  type Application,
+  type Role,
+  type Workspace,
+} from '~/generated-metadata/graphql';
+
+export type CurrentWorkspace = Pick<
+  Workspace,
+  | 'id'
+  | 'inviteHash'
+  | 'logo'
+  | 'displayName'
+  | 'allowImpersonation'
+  | 'featureFlags'
+  | 'activationStatus'
+  | 'billingSubscriptions'
+  | 'billingEntitlements'
+  | 'billingCustomer'
+  | 'currentBillingSubscription'
+  | 'isTrialAvailable'
+  | 'workspaceMembersCount'
+  | 'isPublicInviteLinkEnabled'
+  | 'isCampaignClickTrackingEnabled'
+  | 'isCampaignOpenTrackingEnabled'
+  | 'workspaceDiscoverability'
+  | 'isGoogleAuthEnabled'
+  | 'isGoogleAuthBypassEnabled'
+  | 'isMicrosoftAuthEnabled'
+  | 'isMicrosoftAuthBypassEnabled'
+  | 'isPasswordAuthEnabled'
+  | 'isPasswordAuthBypassEnabled'
+  | 'isCustomDomainEnabled'
+  | 'iframeMediaPermissions'
+  | 'hasValidSignedEnterpriseKey'
+  | 'hasValidEnterpriseValidityToken'
+  | 'subdomain'
+  | 'customDomain'
+  | 'workspaceUrls'
+  | 'isTwoFactorAuthenticationEnforced'
+  | 'trashRetentionDays'
+  | 'eventLogRetentionDays'
+  | 'aiChatModelTier'
+  | 'aiChatAssistantProfile'
+  | 'aiChatDirectMessageAssistantMode'
+  | 'aiChatInboxAssistantMode'
+  | 'aiAgentModelTier'
+  | 'isAutoModelSelectionEnabled'
+  | 'aiModelIdByTier'
+  | 'aiAdditionalInstructions'
+  | 'aiDataPolicy'
+  | 'editableProfileFields'
+  | 'isInternalMessagesImportEnabled'
+> & {
+  defaultRole?: Omit<Role, 'workspaceMembers' | 'agents' | 'apiKeys'> | null;
+  workspaceCustomApplication: Pick<Application, 'id'> | null;
+  installedApplications: Pick<
+    Application,
+    | 'id'
+    | 'name'
+    | 'description'
+    | 'universalIdentifier'
+    | 'logoUrl'
+    | 'createdAt'
+  >[];
+};
+
+export const currentWorkspaceState = createAtomState<CurrentWorkspace | null>({
+  key: 'currentWorkspaceState',
+  defaultValue: null,
+  useLocalStorage: true,
+  localStorageOptions: { getOnInit: true },
+});

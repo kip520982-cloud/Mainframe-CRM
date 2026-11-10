@@ -1,0 +1,68 @@
+import { useMemo } from 'react';
+
+import { FormSelectFieldInput } from '@/object-record/record-field/ui/form-types/components/FormSelectFieldInput';
+import { type VariablePickerComponent } from '@/ui/input/types/VariablePickerComponent';
+import { useCountries } from '@/ui/input/components/internal/hooks/useCountries';
+import { IconCircleOff, type IconComponentProps } from 'twenty-ui/icon';
+import { type SelectOption } from 'twenty-ui/primitives/input';
+import { useLingui } from '@lingui/react/macro';
+
+export const FormCountrySelectInput = ({
+  selectedCountryName,
+  onChange,
+  label,
+  readonly = false,
+  VariablePicker,
+}: {
+  selectedCountryName: string;
+  onChange: (country: string) => void;
+  label?: string;
+  readonly?: boolean;
+  VariablePicker?: VariablePickerComponent;
+}) => {
+  const { t } = useLingui();
+  const countries = useCountries();
+
+  const options: SelectOption[] = useMemo(() => {
+    const countryList = countries.map<SelectOption>(
+      ({ countryName, Flag }) => ({
+        label: countryName,
+        value: countryName,
+        Icon: (props: IconComponentProps) =>
+          Flag({ width: props.size, height: props.size }),
+      }),
+    );
+    return [
+      {
+        label: t`No country`,
+        value: '',
+        Icon: IconCircleOff,
+      },
+      ...countryList,
+    ];
+  }, [countries, t]);
+
+  const onCountryChange = (country: string | null) => {
+    if (readonly) {
+      return;
+    }
+
+    if (country === null) {
+      onChange('');
+    } else {
+      onChange(country);
+    }
+  };
+
+  return (
+    <FormSelectFieldInput
+      label={label}
+      onChange={onCountryChange}
+      options={options}
+      defaultValue={selectedCountryName}
+      placeholder={t`Select a country`}
+      readonly={readonly}
+      VariablePicker={VariablePicker}
+    />
+  );
+};

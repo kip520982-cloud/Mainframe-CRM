@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mainframe CRM — three UI concepts</title>
+<style>
+  @font-face {
+    font-family: "IBM Plex Mono";
+    font-style: normal;
+    font-weight: 400 600;
+    font-display: swap;
+    src: local("IBM Plex Mono"), local("Menlo"), local("SF Mono");
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background:#050505;
+    color:#e8e8e8;
+    padding:48px 28px 90px;
+  }
+  .mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+  .wrap{max-width:1320px;margin:0 auto}
+
+  .hero{
+    display:flex;flex-direction:column;align-items:center;text-align:center;
+    margin-bottom:52px;gap:14px;
+  }
+  .hero-lockup{
+    display:flex;align-items:center;gap:14px;
+    padding:10px 16px;border:1px solid #222;border-radius:12px;
+    background:#0a0a0a;
+  }
+  .hero-lockup img{height:36px;width:auto;display:block}
+  .hero-lockup .word{
+    font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    font-size:18px;font-weight:500;letter-spacing:-.02em;color:#fff;
+  }
+  h1{font-size:28px;letter-spacing:-.03em;font-weight:650;margin-top:8px}
+  h1 span{color:#9ae6ff}
+  .lede{color:#8a8a8a;font-size:15px;max-width:560px;line-height:1.55}
+  .pick{font-size:13px;color:#5a5a5a}
+  .pick strong{color:#9ae6ff;font-weight:600}
+
+  .concepts{display:grid;gap:64px}
+  .concept-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+  .concept-num{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:12px;color:#9ae6ff;font-weight:600}
+  .concept-title{font-size:22px;font-weight:650;letter-spacing:-.02em}
+  .concept-tag{font-size:11px;padding:3px 9px;border-radius:999px;border:1px solid #2a2a2a;color:#8a8a8a}
+  .concept-blurb{color:#8a8a8a;font-size:14px;line-height:1.5;max-width:760px;margin-bottom:18px}
+
+  .frame{border-radius:14px;overflow:hidden;box-shadow:0 30px 80px -40px rgba(0,0,0,.9)}
+  .chrome{display:flex;align-items:center;gap:6px;padding:9px 12px}
+  .chrome .d{width:9px;height:9px;border-radius:50%;opacity:.55}
+  .chrome .url{
+    margin-left:8px;font-size:10.5px;padding:3px 10px;border-radius:6px;
+    font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+
+  .brand{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+    font-size:12.5px;font-weight:500;letter-spacing:-.02em;
+  }
+  .brand img{width:22px;height:22px;display:block;border-radius:5px}
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px}
+  .nav-left{display:flex;align-items:center;gap:18px;min-width:0}
+  .tabs{display:flex;gap:2px;font-size:11.5px}
+  .tabs span{padding:5px 9px;border-radius:6px;color:inherit;opacity:.55}
+  .tabs span.on{opacity:1;font-weight:600}
+  .navr{display:flex;align-items:center;gap:8px;font-size:11px}
+  .btn{
+    display:inline-flex;align-items:center;gap:5px;
+    font-weight:600;border-radius:7px;padding:6px 11px;font-size:11.5px;border:none;
+  }
+  .search{
+    font-size:11px;padding:6px 10px;border-radius:7px;min-width:140px;
+    font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  }
+  .board{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+  .col{border-radius:10px;padding:8px;min-height:250px}
+  .col-h{
+    display:flex;align-items:center;justify-content:space-between;
+    font-size:10.5px;font-weight:650;margin-bottom:8px;padding:2px 2px 8px;
+  }
+  .col-h .n{font-weight:500;opacity:.65;font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:10px}
+  .deal{
+    border-radius:8px;padding:10px;margin-bottom:7px;
+    border-left:3px solid transparent;
+  }
+  .deal .name{font-size:12px;font-weight:600;line-height:1.25}
+  .deal .co{font-size:10.5px;margin-top:3px;opacity:.65}
+  .deal .meta{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:8px}
+  .deal .amt{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:10.5px;font-weight:500}
+  .pri{
+    font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    padding:2px 6px;border-radius:4px;
+  }
+  .avatar{
+    width:18px;height:18px;border-radius:50%;display:inline-flex;
+    align-items:center;justify-content:center;font-size:8px;font-weight:700;
+  }
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:10.5px;opacity:.7}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+  /* ========== 1 Terminal Night ========== */
+  .c1 .frame{background:#0a0a0a;border:1px solid #1c1c1c}
+  .c1 .chrome{background:#111;border-bottom:1px solid #1c1c1c}
+  .c1 .chrome .d{background:#333}
+  .c1 .chrome .url{background:#050505;border:1px solid #1c1c1c;color:#666}
+  .c1 .page{background:#050505;color:#f2f2f2;padding:16px;min-height:320px}
+  .c1 .tabs span.on{background:#161616;color:#fff}
+  .c1 .btn.primary{background:#fff;color:#050505}
+  .c1 .search{background:#111;border:1px solid #222;color:#666}
+  .c1 .col{background:#0c0c0c;border:1px solid #1a1a1a}
+  .c1 .col-h{border-bottom:1px solid #1a1a1a}
+  .c1 .col.new .col-h{color:#8a8a8a}
+  .c1 .col.screen .col-h{color:#9ae6ff}
+  .c1 .col.meeting .col-h{color:#fbbf24}
+  .c1 .col.proposal .col-h{color:#fb7185}
+  .c1 .col.won .col-h{color:#4ade80}
+  .c1 .deal{background:#121212;border:1px solid #222}
+  .c1 .deal.p1{border-left-color:#fb7185}
+  .c1 .deal.p2{border-left-color:#fbbf24}
+  .c1 .deal.p3{border-left-color:#9ae6ff}
+  .c1 .deal.p4{border-left-color:#333}
+  .c1 .pri.p1{background:rgba(251,113,133,.15);color:#fb7185}
+  .c1 .pri.p2{background:rgba(251,191,36,.14);color:#fbbf24}
+  .c1 .pri.p3{background:rgba(154,230,255,.12);color:#9ae6ff}
+  .c1 .pri.p4{background:#1a1a1a;color:#8a8a8a}
+  .c1 .avatar{background:#1a1a1a;color:#9ae6ff}
+  .c1 .amt{color:#cfcfcf}
+
+  /* ========== 2 Paper Desk ========== */
+  .c2 .frame{background:#fff;border:1px solid #E6E4DE}
+  .c2 .chrome{background:#F4F3EF;border-bottom:1px solid #E6E4DE}
+  .c2 .chrome .d{background:#C8C5BC}
+  .c2 .chrome .url{background:#fff;border:1px solid #E6E4DE;color:#7A7770}
+  .c2 .page{background:#F7F6F2;color:#141414;padding:16px;min-height:320px}
+  .c2 .brand{color:#141414}
+  .c2 .tabs span{color:#141414}
+  .c2 .tabs span.on{background:#fff;border:1px solid #E6E4DE;color:#141414}
+  .c2 .btn.primary{background:#141414;color:#fff}
+  .c2 .search{background:#fff;border:1px solid #E6E4DE;color:#7A7770}
+  .c2 .col{background:#fff;border:1px solid #E6E4DE}
+  .c2 .col-h{border-bottom:1px solid #EEECE6}
+  .c2 .col.new .col-h{color:#6B6962}
+  .c2 .col.screen .col-h{color:#0E7490}
+  .c2 .col.meeting .col-h{color:#B45309}
+  .c2 .col.proposal .col-h{color:#BE123C}
+  .c2 .col.won .col-h{color:#15803D}
+  .c2 .deal{background:#FBFBF9;border:1px solid #EDEBE4}
+  .c2 .deal.p1{border-left-color:#BE123C}
+  .c2 .deal.p2{border-left-color:#B45309}
+  .c2 .deal.p3{border-left-color:#0E7490}
+  .c2 .deal.p4{border-left-color:#C8C5BC}
+  .c2 .pri.p1{background:#FFE4E6;color:#BE123C}
+  .c2 .pri.p2{background:#FEF3C7;color:#B45309}
+  .c2 .pri.p3{background:#CFFAFE;color:#0E7490}
+  .c2 .pri.p4{background:#EEECE6;color:#6B6962}
+  .c2 .avatar{background:#141414;color:#fff}
+  .c2 .amt{color:#3a3a3a}
+  .c2 .legend{color:#6B6962;opacity:1}
+
+  /* ========== 3 Dual Focus ========== */
+  .c3 .frame{background:#EEF0F3;border:1px solid #D5D9E0}
+  .c3 .chrome{background:#0a0a0a;border-bottom:1px solid #222}
+  .c3 .chrome .d{background:#444}
+  .c3 .chrome .url{background:#050505;border:1px solid #222;color:#888}
+  .c3 .page{background:#EEF0F3;color:#141414;padding:0;min-height:320px}
+  .c3 .topbar{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    background:#0a0a0a;color:#f2f2f2;padding:12px 14px;
+  }
+  .c3 .topbar .tabs span{color:#f2f2f2}
+  .c3 .topbar .tabs span.on{background:#1a1a1a;color:#9ae6ff}
+  .c3 .topbar .btn.primary{background:#fff;color:#050505}
+  .c3 .topbar .search{background:#141414;border:1px solid #2a2a2a;color:#777}
+  .c3 .body{display:grid;grid-template-columns:88px 1fr;min-height:270px}
+  .c3 .rail{
+    background:#E4E7EC;border-right:1px solid #D5D9E0;padding:12px 8px;
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .c3 .rail button{
+    appearance:none;border:none;background:transparent;text-align:left;
+    font-size:10px;font-weight:650;padding:8px 7px;border-radius:6px;color:#5C6470;
+    font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;line-height:1.25;
+  }
+  .c3 .rail button.on{background:#0a0a0a;color:#9ae6ff}
+  .c3 .rail .cnt{display:block;font-weight:500;opacity:.65;font-size:9px;margin-top:1px}
+  .c3 .main{padding:14px}
+  .c3 .list{display:flex;flex-direction:column;gap:7px}
+  .c3 .row{
+    display:flex;align-items:center;gap:12px;
+    background:#fff;border:1px solid #D5D9E0;border-radius:10px;padding:11px 12px;
+  }
+  .c3 .row.hot{box-shadow:inset 3px 0 0 #BE123C}
+  .c3 .row.warm{box-shadow:inset 3px 0 0 #B45309}
+  .c3 .row.live{box-shadow:inset 3px 0 0 #0E7490}
+  .c3 .row .main-t{flex:1;min-width:0}
+  .c3 .row .name{font-size:12.5px;font-weight:600}
+  .c3 .row .co{font-size:10.5px;color:#6B7280;margin-top:2px}
+  .c3 .stage{
+    font-size:10px;font-weight:650;padding:3px 8px;border-radius:999px;white-space:nowrap;
+  }
+  .c3 .stage.screen{background:#CFFAFE;color:#0E7490}
+  .c3 .stage.meeting{background:#FEF3C7;color:#B45309}
+  .c3 .stage.proposal{background:#FFE4E6;color:#BE123C}
+  .c3 .stage.new{background:#EEECE6;color:#6B6962}
+  .c3 .stage.won{background:#DCFCE7;color:#15803D}
+  .c3 .amt{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:11px;color:#374151;width:72px;text-align:right}
+  .c3 .when{font-size:10px;color:#6B7280;width:48px;text-align:right}
+
+  .note{
+    margin-top:48px;padding:16px 18px;border:1px dashed #2a2a2a;border-radius:12px;
+    color:#777;font-size:12.5px;line-height:1.5;
+  }
+  .note code{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;color:#9ae6ff;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="hero-lockup">
+      <img src="assets/mainframe-mark-light.png" alt="Mainframe mark" width="36" height="36">
+      <span class="word">mainframe_digital</span>
+    </div>
+    <h1>CRM concepts for <span>Twenty × Mainframe</span></h1>
+    <p class="lede">Opportunities pipeline with real deal names + companies. Stages and priority stay colour-coded. Your terminal mark in the chrome — not Twenty&rsquo;s logo.</p>
+    <p class="pick">Reply with <strong>1</strong>, <strong>2</strong>, or <strong>3</strong> when you&rsquo;ve chosen.</p>
+  </header>
+
+  <div class="concepts">
+
+    <!-- 1 -->
+    <section class="concept c1" id="concept-1">
+      <div class="concept-head">
+        <span class="concept-num">01</span>
+        <h2 class="concept-title">Terminal Night</h2>
+        <span class="concept-tag">Dark · kanban pipeline</span>
+      </div>
+      <p class="concept-blurb">True black shell matching the logo kit. White mark + <span class="mono">mainframe_digital</span> wordmark. Colour is reserved for stage headers and priority stripes — urgent deals read instantly.</p>
+
+      <div class="frame">
+        <div class="chrome">
+          <span class="d"></span><span class="d"></span><span class="d"></span>
+          <span class="url">crm.mainframedigital.co.nz / opportunities</span>
+        </div>
+        <div class="page">
+          <div class="nav">
+            <div class="nav-left">
+              <span class="brand">
+                <img src="assets/mainframe-mark-light.png" alt="">
+                mainframe_digital
+              </span>
+              <div class="tabs">
+                <span>People</span>
+                <span>Companies</span>
+                <span class="on">Opportunities</span>
+                <span>Tasks</span>
+              </div>
+            </div>
+            <div class="navr">
+              <span class="search">Filter deals…</span>
+              <span class="btn primary">+ New</span>
+            </div>
+          </div>
+
+          <div class="board">
+            <div class="col new">
+              <div class="col-h">New <span class="n">2</span></div>
+              <div class="deal p3">
+                <div class="name">Website rebuild</div>
+                <div class="co">Colon Care Centre</div>
+                <div class="meta">
+                  <span class="amt">$18k</span>
+                  <span class="pri p3">Med</span>
+                </div>
+              </div>
+              <div class="deal p4">
+                <div class="name">Inbound — form lead</div>
+                <div class="co">Northside Tutoring</div>
+                <div class="meta">
+                  <span class="amt">—</span>
+                  <span class="pri p4">Low</span>
+                </div>
+              </div>
+            </div>
+            <div class="col screen">
+              <div class="col-h">Screening <span class="n">1</span></div>
+              <div class="deal p2">
+                <div class="name">CRM rollout</div>
+                <div class="co">Auckland Music Academy</div>
+                <div class="meta">
+                  <span class="amt">$42k</span>
+                  <span class="pri p2">High</span>
+                </div>
+              </div>
+            </div>
+            <div class="col meeting">
+              <div class="col-h">Meeting <span class="n">2</span></div>
+              <div class="deal p1">
+                <div class="name">Property AI briefing</div>
+                <div class="co">Whitfield Plumbing</div>
+                <div class="meta">
+                  <span class="amt">$65k</span>
+                  <span class="pri p1">Urgent</span>
+                </div>
+              </div>
+              <div class="deal p2">
+                <div class="name">Lead capture agent</div>
+                <div class="co">Southern Cross Landscaping</div>
+                <div class="meta">
+                  <span class="amt">$28k</span>
+                  <span class="pri p2">High</span>
+                </div>
+              </div>
+            </div>
+            <div class="col proposal">
+              <div class="col-h">Proposal <span class="n">1</span></div>
+              <div class="deal p1">
+                <div class="name">Ops automation pack</div>
+                <div class="co">HazardCo</div>
+                <div class="meta">
+                  <span class="amt">$90k</span>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <span class="pri p1">Urgent</span>
+                    <span class="avatar">BD</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col won">
+              <div class="col-h">Customer <span class="n">1</span></div>
+              <div class="deal p4">
+                <div class="name">Retainer — growth</div>
+                <div class="co">IDJS</div>
+                <div class="meta">
+                  <span class="amt">$12k/mo</span>
+                  <span class="pri p4">Won</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="legend">
+            <span><i style="background:#fb7185"></i>Urgent</span>
+            <span><i style="background:#fbbf24"></i>High</span>
+            <span><i style="background:#9ae6ff"></i>Med</span>
+            <span><i style="background:#333"></i>Low / Won</span>
+            <span style="margin-left:auto" class="mono">deal name · company always primary</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="concept c2" id="concept-2">
+      <div class="concept-head">
+        <span class="concept-num">02</span>
+        <h2 class="concept-title">Paper Desk</h2>
+        <span class="concept-tag">Light · same board</span>
+      </div>
+      <p class="concept-blurb">Daylight reading surface. Black Mainframe mark on paper. Same five-stage board and priority stripes — quieter chrome, still scannable for deal name + company.</p>
+
+      <div class="frame">
+        <div class="chrome">
+          <span class="d"></span><span class="d"></span><span class="d"></span>
+          <span class="url">crm.mainframedigital.co.nz / opportunities</span>
+        </div>
+        <div class="page">
+          <div class="nav">
+            <div class="nav-left">
+              <span class="brand">
+                <img src="assets/mainframe-mark-dark.png" alt="">
+                mainframe_digital
+              </span>
+              <div class="tabs">
+                <span>People</span>
+                <span>Companies</span>
+                <span class="on">Opportunities</span>
+                <span>Tasks</span>
+              </div>
+            </div>
+            <div class="navr">
+              <span class="search">Filter deals…</span>
+              <span class="btn primary">+ New</span>
+            </div>
+          </div>
+
+          <div class="board">
+            <div class="col new">
+              <div class="col-h">New <span class="n">2</span></div>
+              <div class="deal p3">
+                <div class="name">Website rebuild</div>
+                <div class="co">Colon Care Centre</div>
+                <div class="meta"><span class="amt">$18k</span><span class="pri p3">Med</span></div>
+              </div>
+              <div class="deal p4">
+                <div class="name">Inbound — form lead</div>
+                <div class="co">Northside Tutoring</div>
+                <div class="meta"><span class="amt">—</span><span class="pri p4">Low</span></div>
+              </div>
+            </div>
+            <div class="col screen">
+              <div class="col-h">Screening <span class="n">1</span></div>
+              <div class="deal p2">
+                <div class="name">CRM rollout</div>
+                <div class="co">Auckland Music Academy</div>
+                <div class="meta"><span class="amt">$42k</span><span class="pri p2">High</span></div>
+              </div>
+            </div>
+            <div class="col meeting">
+              <div class="col-h">Meeting <span class="n">2</span></div>
+              <div class="deal p1">
+                <div class="name">Property AI briefing</div>
+                <div class="co">Whitfield Plumbing</div>
+                <div class="meta"><span class="amt">$65k</span><span class="pri p1">Urgent</span></div>
+              </div>
+              <div class="deal p2">
+                <div class="name">Lead capture agent</div>
+                <div class="co">Southern Cross Landscaping</div>
+                <div class="meta"><span class="amt">$28k</span><span class="pri p2">High</span></div>
+              </div>
+            </div>
+            <div class="col proposal">
+              <div class="col-h">Proposal <span class="n">1</span></div>
+              <div class="deal p1">
+                <div class="name">Ops automation pack</div>
+                <div class="co">HazardCo</div>
+                <div class="meta">
+                  <span class="amt">$90k</span>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <span class="pri p1">Urgent</span>
+                    <span class="avatar">BD</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col won">
+              <div class="col-h">Customer <span class="n">1</span></div>
+              <div class="deal p4">
+                <div class="name">Retainer — growth</div>
+                <div class="co">IDJS</div>
+                <div class="meta"><span class="amt">$12k/mo</span><span class="pri p4">Won</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="legend">
+            <span><i style="background:#BE123C"></i>Urgent</span>
+            <span><i style="background:#B45309"></i>High</span>
+            <span><i style="background:#0E7490"></i>Med</span>
+            <span><i style="background:#C8C5BC"></i>Low / Won</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 -->
+    <section class="concept c3" id="concept-3">
+      <div class="concept-head">
+        <span class="concept-num">03</span>
+        <h2 class="concept-title">Dual Focus</h2>
+        <span class="concept-tag">Hybrid · stage rail + list</span>
+      </div>
+      <p class="concept-blurb">Dark Mainframe chrome (logo + nav). Soft gray deal list for reading. Left rail filters by stage; left stripe still shows urgency. Same fields — name, company, amount, stage — zero feature loss.</p>
+
+      <div class="frame">
+        <div class="chrome">
+          <span class="d"></span><span class="d"></span><span class="d"></span>
+          <span class="url">crm.mainframedigital.co.nz / opportunities</span>
+        </div>
+        <div class="page">
+          <div class="topbar">
+            <div class="nav-left">
+              <span class="brand">
+                <img src="assets/mainframe-mark-light.png" alt="">
+                mainframe_digital
+              </span>
+              <div class="tabs">
+                <span>People</span>
+                <span>Companies</span>
+                <span class="on">Opportunities</span>
+                <span>Tasks</span>
+              </div>
+            </div>
+            <div class="navr">
+              <span class="search">Filter deals…</span>
+              <span class="btn primary">+ New</span>
+            </div>
+          </div>
+          <div class="body">
+            <aside class="rail">
+              <button type="button" class="on">All<span class="cnt">7</span></button>
+              <button type="button">New<span class="cnt">2</span></button>
+              <button type="button">Screen<span class="cnt">1</span></button>
+              <button type="button">Meeting<span class="cnt">2</span></button>
+              <button type="button">Proposal<span class="cnt">1</span></button>
+              <button type="button">Won<span class="cnt">1</span></button>
+            </aside>
+            <div class="main">
+              <div class="list">
+                <div class="row hot">
+                  <div class="main-t">
+                    <div class="name">Ops automation pack</div>
+                    <div class="co">HazardCo</div>
+                  </div>
+                  <span class="stage proposal">Proposal</span>
+                  <span class="amt">$90k</span>
+                  <span class="when">Today</span>
+                </div>
+                <div class="row hot">
+                  <div class="main-t">
+                    <div class="name">Property AI briefing</div>
+                    <div class="co">Whitfield Plumbing</div>
+                  </div>
+                  <span class="stage meeting">Meeting</span>
+                  <span class="amt">$65k</span>
+                  <span class="when">Today</span>
+                </div>
+                <div class="row warm">
+                  <div class="main-t">
+                    <div class="name">CRM rollout</div>
+                    <div class="co">Auckland Music Academy</div>
+                  </div>
+                  <span class="stage screen">Screening</span>
+                  <span class="amt">$42k</span>
+                  <span class="when">Yest.</span>
+                </div>
+                <div class="row warm">
+                  <div class="main-t">
+                    <div class="name">Lead capture agent</div>
+                    <div class="co">Southern Cross Landscaping</div>
+                  </div>
+                  <span class="stage meeting">Meeting</span>
+                  <span class="amt">$28k</span>
+                  <span class="when">Mon</span>
+                </div>
+                <div class="row live">
+                  <div class="main-t">
+                    <div class="name">Website rebuild</div>
+                    <div class="co">Colon Care Centre</div>
+                  </div>
+                  <span class="stage new">New</span>
+                  <span class="amt">$18k</span>
+                  <span class="when">Mon</span>
+                </div>
+                <div class="row">
+                  <div class="main-t">
+                    <div class="name">Retainer — growth</div>
+                    <div class="co">IDJS</div>
+                  </div>
+                  <span class="stage won">Customer</span>
+                  <span class="amt">$12k/mo</span>
+                  <span class="when">Oct</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <p class="note">
+    Built for <strong>Mainframe CRM</strong> (Twenty), not Earpiece. Figma node <code>127461:490154</code> needs editor access on the Twenty file for pixel-matching — share edit with the Figma MCP account and we can lock stages/spacing to the board exactly.
+    Logos from your kit: terminal mark + <code>mainframe_digital</code> wordmark.
+  </p>
+</div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+import { type DataMessagePart } from '@/ai/types/DataMessagePart';
+import { type Nullable } from '@/types';
+import { type UIMessage } from 'ai';
+
+export type AiChatUsageMetadata = {
+  inputTokens: number;
+  outputTokens: number;
+  cachedInputTokens: number;
+  inputCredits: number;
+  outputCredits: number;
+  conversationSize: number;
+};
+
+export type AiChatModelMetadata = {
+  contextWindowTokens: number;
+};
+
+type Metadata = {
+  createdAt?: string;
+  startedAt?: string;
+  finishedAt?: string;
+  senderWorkspaceMemberId?: string | null;
+  turnId?: string | null;
+  usage?: AiChatUsageMetadata;
+  model?: AiChatModelMetadata;
+};
+
+export type ExtendedUIMessage = UIMessage<Metadata, DataMessagePart> & {
+  threadId?: Nullable<string>;
+  status?: 'queued' | 'sent';
+};

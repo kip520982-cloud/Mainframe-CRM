@@ -1,0 +1,99 @@
+import { useState } from 'react';
+
+import { EmailThreadMessageAttachments } from '@/activities/emails/components/EmailThreadMessageAttachments';
+import { EmailThreadMessageBody } from '@/activities/emails/components/EmailThreadMessageBody';
+import { EmailThreadMessageBodyPreview } from '@/activities/emails/components/EmailThreadMessageBodyPreview';
+import { EmailThreadMessageLayout } from '@/activities/emails/components/EmailThreadMessageLayout';
+import { EmailThreadMessageReceivers } from '@/activities/emails/components/EmailThreadMessageReceivers';
+import { EmailThreadMessageSender } from '@/activities/emails/components/EmailThreadMessageSender';
+import { EmailThreadNotShared } from '@/activities/emails/components/EmailThreadNotShared';
+import { type EmailThreadMessageWithSender } from '@/activities/emails/types/EmailThreadMessageWithSender';
+import { MessageParticipantRole } from 'twenty-shared/types';
+import { isFieldValueRestricted, isNonEmptyArray } from 'twenty-shared/utils';
+import { MessageChannelVisibility } from '~/generated/graphql';
+
+type EmailThreadMessageProps = {
+  message: EmailThreadMessageWithSender;
+  isExpanded?: boolean;
+  hideBottomBorder?: boolean;
+  onDraftClick: (message: EmailThreadMessageWithSender) => void;
+};
+
+export const EmailThreadMessage = ({
+  message,
+  isExpanded = false,
+  hideBottomBorder = false,
+  onDraftClick,
+}: EmailThreadMessageProps) => {
+  const [isOpen, setIsOpen] = useState(isExpanded);
+
+  const receivers = message.messageParticipants.filter(
+    (participant) => participant.role !== MessageParticipantRole.FROM,
+  );
+
+  const { isDraft } = message;
+
+  const isRestricted = isFieldValueRestricted(message.text);
+
+  const attachmentFiles = (message.attachments ?? []).flatMap(
+    (attachment) => attachment.file ?? [],
+  );
+  const hasAttachments = !isRestricted && isNonEmptyArray(attachmentFiles);
+
+  const handleRowClick = () => {
+    if (isRestricted) {
+      return;
+    }
+
+    if (isDraft) {
+      onDraftClick(message);
+
+      return;
+    }
+
+    if (!isOpen) {
+      setIsOpen(true);
+    }
+  };
+
+  const handleHeaderClick = () => {
+    if (!isDraft && isOpen) {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <EmailThreadMessageLayout
+      hideBottomBorder={hideBottomBorder}
+      isRowClickable={!isRestricted && (isDraft || !isOpen)}
+      isHeaderClickable={!isDraft && isOpen}
+      onRowClick={handleRowClick}
+      onHeaderClick={handleHeaderClick}
+      header={
+        <>
+          <EmailThreadMessageSender
+            sender={message.sender}
+            sentAt={message.receivedAt}
+            hasAttachments={hasAttachments}
+          />
+          {!isDraft && isOpen && receivers.length > 0 && (
+            <EmailThreadMessageReceivers receivers={receivers} />
+          )}
+        </>
+      }
+    >
+      {isRestricted ? (
+        <EmailThreadNotShared visibility={MessageChannelVisibility.METADATA} />
+      ) : isDraft || !isOpen ? (
+        <EmailThreadMessageBodyPreview body={message.text} />
+      ) : (
+        <>
+          <EmailThreadMessageBody body={message.text} isDisplayed />
+          {hasAttachments && (
+            <EmailThreadMessageAttachments files={attachmentFiles} />
+          )}
+        </>
+      )}
+    </EmailThreadMessageLayout>
+  );
+};

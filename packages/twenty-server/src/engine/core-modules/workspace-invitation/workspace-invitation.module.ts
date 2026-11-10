@@ -1,0 +1,30 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+import { AppTokenEntity } from 'src/engine/core-modules/app-token/app-token.entity';
+import { WorkspaceDomainsModule } from 'src/engine/core-modules/domain/workspace-domains/workspace-domains.module';
+import { FileModule } from 'src/engine/core-modules/file/file.module';
+import { GettingStartedModule } from 'src/engine/core-modules/getting-started/getting-started.module';
+import { OnboardingModule } from 'src/engine/core-modules/onboarding/onboarding.module';
+import { ThrottlerModule } from 'src/engine/core-modules/throttler/throttler.module';
+import { UserWorkspaceEntity } from 'src/engine/core-modules/user-workspace/user-workspace.entity';
+import { WorkspaceInvitationService } from 'src/engine/core-modules/workspace-invitation/services/workspace-invitation.service';
+import { WorkspaceInvitationResolver } from 'src/engine/core-modules/workspace-invitation/workspace-invitation.resolver';
+import { PermissionsModule } from 'src/engine/permissions/permissions.module';
+import { RoleAssignmentModule } from 'src/engine/permissions/role-assignment/role-assignment.module';
+
+@Module({
+  imports: [
+    WorkspaceDomainsModule,
+    TypeOrmModule.forFeature([AppTokenEntity, UserWorkspaceEntity]),
+    RoleAssignmentModule,
+    FileModule,
+    GettingStartedModule,
+    OnboardingModule,
+    PermissionsModule,
+    ThrottlerModule,
+  ],
+  exports: [WorkspaceInvitationService],
+  providers: [WorkspaceInvitationService, WorkspaceInvitationResolver],
+})
+export class WorkspaceInvitationModule {}

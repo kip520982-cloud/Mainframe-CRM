@@ -1,0 +1,31 @@
+import { gql } from '@apollo/client';
+
+export const GET_MY_MESSAGE_CHANNELS = gql`
+  query MyMessageChannels($connectedAccountId: UUID) {
+    myMessageChannels(connectedAccountId: $connectedAccountId) {
+      id
+      handle
+      displayName
+      visibility
+      type
+      isContactAutoCreationEnabled
+      contactAutoCreationPolicy
+      messageFolderImportPolicy
+      excludeNonProfessionalEmails
+      excludeGroupEmails
+      isSyncEnabled
+      messagingProviderUniversalIdentifier
+      syncStatus
+      syncStage
+      syncStageStartedAt
+      importProgress
+      connectedAccountId
+      connectedAccount {
+        id
+        handle
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;

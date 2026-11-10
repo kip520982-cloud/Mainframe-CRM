@@ -1,0 +1,700 @@
+import { findManyObjectMetadata } from 'test/integration/metadata/suites/object-metadata/utils/find-many-object-metadata.util';
+import { createOneRole } from 'test/integration/metadata/suites/role/utils/create-one-role.util';
+import { deleteOneRole } from 'test/integration/metadata/suites/role/utils/delete-one-role.util';
+import { upsertRowLevelPermissionPredicates } from 'test/integration/metadata/suites/row-level-permission-predicate/utils/upsert-row-level-permission-predicates.util';
+import { updateFeatureFlag } from 'test/integration/metadata/suites/utils/update-feature-flag.util';
+import { jestExpectToBeDefined } from 'test/utils/jest-expect-to-be-defined.util.test';
+import {
+  FeatureFlagKey,
+  RowLevelPermissionPredicateGroupLogicalOperator,
+  RowLevelPermissionPredicateOperand,
+} from 'twenty-shared/types';
+import { v4 } from 'uuid';
+
+import { type UpsertRowLevelPermissionPredicatesInput } from 'src/engine/metadata-modules/row-level-permission-predicate/dtos/inputs/upsert-row-level-permission-predicates.input';
+
+describe('Row Level Permission Predicate upsert should succeed', () => {
+  let companyObjectMetadataId: string;
+  let companyNameFieldMetadataId: string;
+  let personObjectMetadataId: string;
+  let personCompanyFieldMetadataId: string;
+  let createdRoleId: string;
+
+  beforeAll(async () => {
+    const { objects } = await findManyObjectMetadata({
+      expectToFail: false,
+      input: {
+        filter: {},
+        paging: { first: 1000 },
+      },
+      gqlFields: `
+        id
+        nameSingular
+        fieldsList {
+          id
+          name
+        }
+      `,
+    });
+
+    jestExpectToBeDefined(objects);
+
+    const companyObjectMetadata = objects.find(
+      (object: { nameSingular: string }) => object.nameSingular === 'company',
+    );
+
+    jestExpectToBeDefined(companyObjectMetadata);
+    companyObjectMetadataId = companyObjectMetadata.id;
+
+    jestExpectToBeDefined(companyObjectMetadata.fieldsList);
+    const nameField = companyObjectMetadata.fieldsList.find(
+      (field: { name: string }) => field.name === 'name',
+    );
+
+    jestExpectToBeDefined(nameField);
+    companyNameFieldMetadataId = nameField.id;
+
+    const personObjectMetadata = objects.find(
+      (object: { nameSingular: string }) => object.nameSingular === 'person',
+    );
+
+    jestExpectToBeDefined(personObjectMetadata);
+    jestExpectToBeDefined(personObjectMetadata.fieldsList);
+    personObjectMetadataId = personObjectMetadata.id;
+
+    const personCompanyField = personObjectMetadata.fieldsList.find(
+      (field: { name: string }) => field.name === 'company',
+    );
+
+    jestExpectToBeDefined(personCompanyField);
+    personCompanyFieldMetadataId = personCompanyField.id;
+
+    const { data: roleData } = await createOneRole({
+      expectToFail: false,
+      input: {
+        label: 'Test Role For RLS Predicates',
+        description: 'A role for RLS predicate testing',
+        icon: 'IconSettings',
+        canUpdateAllSettings: false,
+        canAccessAllTools: true,
+        canReadAllObjectRecords: true,
+        canUpdateAllObjectRecords: false,
+        canSoftDeleteAllObjectRecords: false,
+        canDestroyAllObjectRecords: false,
+        canBeAssignedToUsers: true,
+        canBeAssignedToAgents: false,
+        canBeAssignedToApiKeys: false,
+      },
+    });
+
+    createdRoleId = roleData?.createOneRole?.id;
+    jestExpectToBeDefined(createdRoleId);
+  });
+
+  afterAll(async () => {
+    if (createdRoleId) {
+      await deleteOneRole({
+        expectToFail: false,
+        input: { idToDelete: createdRoleId },
+      });
+    }
+  });
+
+  it('should upsert predicates and groups with minimal input', async () => {
+    const input: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [
+        {
+          fieldMetadataId: companyNameFieldMetadataId,
+          operand: RowLevelPermissionPredicateOperand.CONTAINS,
+        },
+      ],
+      predicateGroups: [],
+    };
+
+    const { data } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input,
+    });
+
+    expect(data.upsertRowLevelPermissionPredicates).toBeDefined();
+    expect(data.upsertRowLevelPermissionPredicates.predicates).toHaveLength(1);
+    expect(
+      data.upsertRowLevelPermissionPredicates.predicateGroups,
+    ).toHaveLength(0);
+
+    expect(data.upsertRowLevelPermissionPredicates.predicates[0]).toMatchObject(
+      {
+        id: expect.any(String),
+        fieldMetadataId: companyNameFieldMetadataId,
+        objectMetadataId: companyObjectMetadataId,
+        operand: RowLevelPermissionPredicateOperand.CONTAINS,
+        roleId: createdRoleId,
+        rowLevelPermissionPredicateGroupId: null,
+      },
+    );
+  });
+
+  it('should upsert a predicate reaching a field through a relation', async () => {
+    const input: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: personObjectMetadataId,
+      predicates: [
+        {
+          relationFieldMetadataId: personCompanyFieldMetadataId,
+          fieldMetadataId: companyNameFieldMetadataId,
+          operand: RowLevelPermissionPredicateOperand.CONTAINS,
+          value: 'Acme',
+        },
+      ],
+      predicateGroups: [],
+    };
+
+    await updateFeatureFlag({
+      featureFlag: FeatureFlagKey.IS_ROW_LEVEL_PERMISSION_RELATION_HOP_ENABLED,
+      value: true,
+      expectToFail: false,
+    });
+
+    try {
+      const { data } = await upsertRowLevelPermissionPredicates({
+        expectToFail: false,
+        input,
+      });
+
+      expect(data.upsertRowLevelPermissionPredicates.predicates).toHaveLength(
+        1,
+      );
+      expect(
+        data.upsertRowLevelPermissionPredicates.predicates[0],
+      ).toMatchObject({
+        objectMetadataId: personObjectMetadataId,
+        relationFieldMetadataId: personCompanyFieldMetadataId,
+        fieldMetadataId: companyNameFieldMetadataId,
+        value: 'Acme',
+      });
+    } finally {
+      await updateFeatureFlag({
+        featureFlag:
+          FeatureFlagKey.IS_ROW_LEVEL_PERMISSION_RELATION_HOP_ENABLED,
+        value: false,
+        expectToFail: false,
+      });
+    }
+  });
+
+  it('should upsert predicates with all fields', async () => {
+    const input: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [
+        {
+          fieldMetadataId: companyNameFieldMetadataId,
+          operand: RowLevelPermissionPredicateOperand.CONTAINS,
+          value: 'Test Company',
+          subFieldName: null,
+          workspaceMemberFieldMetadataId: null,
+          workspaceMemberSubFieldName: null,
+          rowLevelPermissionPredicateGroupId: null,
+          positionInRowLevelPermissionPredicateGroup: 0,
+        },
+      ],
+      predicateGroups: [],
+    };
+
+    const { data } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input,
+    });
+
+    expect(data.upsertRowLevelPermissionPredicates.predicates).toHaveLength(1);
+    expect(data.upsertRowLevelPermissionPredicates.predicates[0]).toMatchObject(
+      {
+        id: expect.any(String),
+        fieldMetadataId: companyNameFieldMetadataId,
+        objectMetadataId: companyObjectMetadataId,
+        operand: RowLevelPermissionPredicateOperand.CONTAINS,
+        value: 'Test Company',
+        roleId: createdRoleId,
+      },
+    );
+  });
+
+  it('should upsert predicate groups with logical operators', async () => {
+    const input: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [],
+      predicateGroups: [
+        {
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+          parentRowLevelPermissionPredicateGroupId: null,
+          positionInRowLevelPermissionPredicateGroup: 0,
+        },
+      ],
+    };
+
+    const { data } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input,
+    });
+
+    expect(
+      data.upsertRowLevelPermissionPredicates.predicateGroups,
+    ).toHaveLength(1);
+    expect(
+      data.upsertRowLevelPermissionPredicates.predicateGroups[0],
+    ).toMatchObject({
+      id: expect.any(String),
+      objectMetadataId: companyObjectMetadataId,
+      logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+      roleId: createdRoleId,
+      parentRowLevelPermissionPredicateGroupId: null,
+    });
+  });
+
+  it('should upsert nested predicate groups', async () => {
+    const input: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [],
+      predicateGroups: [
+        {
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+          parentRowLevelPermissionPredicateGroupId: null,
+        },
+      ],
+    };
+
+    const { data: parentData } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input,
+    });
+
+    const parentGroupId =
+      parentData.upsertRowLevelPermissionPredicates.predicateGroups[0]?.id;
+
+    jestExpectToBeDefined(parentGroupId);
+
+    const nestedInput: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [],
+      predicateGroups: [
+        {
+          id: parentGroupId,
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+          parentRowLevelPermissionPredicateGroupId: null,
+        },
+        {
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.OR,
+          parentRowLevelPermissionPredicateGroupId: parentGroupId,
+        },
+      ],
+    };
+
+    const { data: nestedData } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input: nestedInput,
+    });
+
+    expect(
+      nestedData.upsertRowLevelPermissionPredicates.predicateGroups,
+    ).toHaveLength(2);
+
+    const childGroup =
+      nestedData.upsertRowLevelPermissionPredicates.predicateGroups.find(
+        (group) =>
+          group.parentRowLevelPermissionPredicateGroupId === parentGroupId,
+      );
+
+    expect(childGroup).toBeDefined();
+    expect(childGroup?.logicalOperator).toBe(
+      RowLevelPermissionPredicateGroupLogicalOperator.OR,
+    );
+  });
+
+  it('should update existing predicates and groups', async () => {
+    const createInput: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [
+        {
+          fieldMetadataId: companyNameFieldMetadataId,
+          operand: RowLevelPermissionPredicateOperand.CONTAINS,
+        },
+      ],
+      predicateGroups: [
+        {
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+        },
+      ],
+    };
+
+    const { data: createData } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input: createInput,
+    });
+
+    const createdPredicateId =
+      createData.upsertRowLevelPermissionPredicates.predicates[0]?.id;
+    const createdGroupId =
+      createData.upsertRowLevelPermissionPredicates.predicateGroups[0]?.id;
+
+    jestExpectToBeDefined(createdPredicateId);
+    jestExpectToBeDefined(createdGroupId);
+
+    const updateInput: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [
+        {
+          id: createdPredicateId,
+          fieldMetadataId: companyNameFieldMetadataId,
+          operand: RowLevelPermissionPredicateOperand.DOES_NOT_CONTAIN,
+          value: 'Updated Value',
+        },
+      ],
+      predicateGroups: [
+        {
+          id: createdGroupId,
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.OR,
+        },
+      ],
+    };
+
+    const { data: updateData } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input: updateInput,
+    });
+
+    expect(
+      updateData.upsertRowLevelPermissionPredicates.predicates,
+    ).toHaveLength(1);
+    expect(
+      updateData.upsertRowLevelPermissionPredicates.predicates[0],
+    ).toMatchObject({
+      id: createdPredicateId,
+      operand: RowLevelPermissionPredicateOperand.DOES_NOT_CONTAIN,
+      value: 'Updated Value',
+    });
+
+    expect(
+      updateData.upsertRowLevelPermissionPredicates.predicateGroups,
+    ).toHaveLength(1);
+    expect(
+      updateData.upsertRowLevelPermissionPredicates.predicateGroups[0],
+    ).toMatchObject({
+      id: createdGroupId,
+      logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.OR,
+    });
+  });
+
+  it('should keep group operations an update omits and clear the ones it sets to false', async () => {
+    const groupOperations = {
+      canReadRecords: true,
+      canUpdateRecords: true,
+      canSoftDeleteRecords: true,
+      canDestroyRecords: true,
+    };
+    const upsertGroup = async (
+      predicateGroup: UpsertRowLevelPermissionPredicatesInput['predicateGroups'][number],
+    ) => {
+      const { data } = await upsertRowLevelPermissionPredicates({
+        expectToFail: false,
+        input: {
+          roleId: createdRoleId,
+          objectMetadataId: companyObjectMetadataId,
+          predicates: [],
+          predicateGroups: [predicateGroup],
+        },
+      });
+
+      return data.upsertRowLevelPermissionPredicates.predicateGroups[0];
+    };
+
+    const createdGroup = await upsertGroup({
+      objectMetadataId: companyObjectMetadataId,
+      logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+      ...groupOperations,
+    });
+
+    jestExpectToBeDefined(createdGroup?.id);
+    expect(createdGroup).toMatchObject(groupOperations);
+
+    const groupUpdatedWithoutOperations = await upsertGroup({
+      id: createdGroup.id,
+      objectMetadataId: companyObjectMetadataId,
+      logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.OR,
+    });
+
+    expect(groupUpdatedWithoutOperations).toMatchObject({
+      id: createdGroup.id,
+      logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.OR,
+      ...groupOperations,
+    });
+
+    const groupUpdatedWithOperationsOff = await upsertGroup({
+      id: createdGroup.id,
+      objectMetadataId: companyObjectMetadataId,
+      logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.OR,
+      canReadRecords: false,
+      canUpdateRecords: false,
+      canSoftDeleteRecords: false,
+      canDestroyRecords: false,
+    });
+
+    expect(groupUpdatedWithOperationsOff).toMatchObject({
+      id: createdGroup.id,
+      canReadRecords: false,
+      canUpdateRecords: false,
+      canSoftDeleteRecords: false,
+      canDestroyRecords: false,
+    });
+  });
+
+  it('should delete predicates and groups by not including them', async () => {
+    const createInput: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [
+        {
+          fieldMetadataId: companyNameFieldMetadataId,
+          operand: RowLevelPermissionPredicateOperand.CONTAINS,
+        },
+      ],
+      predicateGroups: [
+        {
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+        },
+      ],
+    };
+
+    const { data: createData } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input: createInput,
+    });
+
+    const createdPredicateId =
+      createData.upsertRowLevelPermissionPredicates.predicates[0].id;
+    const createdPredicateGroupId =
+      createData.upsertRowLevelPermissionPredicates.predicateGroups[0].id;
+
+    const deleteInput: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [],
+      predicateGroups: [],
+    };
+
+    const { data: deleteData } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input: deleteInput,
+    });
+
+    expect(
+      deleteData.upsertRowLevelPermissionPredicates.predicates,
+    ).toHaveLength(0);
+    expect(
+      deleteData.upsertRowLevelPermissionPredicates.predicateGroups,
+    ).toHaveLength(0);
+
+    const recreateInput: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [{ ...createInput.predicates[0], id: createdPredicateId }],
+      predicateGroups: [
+        { ...createInput.predicateGroups[0], id: createdPredicateGroupId },
+      ],
+    };
+
+    const { data: recreateData } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input: recreateInput,
+    });
+
+    expect(
+      recreateData.upsertRowLevelPermissionPredicates.predicates.map(
+        ({ id }: { id: string }) => id,
+      ),
+    ).toEqual([createdPredicateId]);
+    expect(
+      recreateData.upsertRowLevelPermissionPredicates.predicateGroups.map(
+        ({ id }: { id: string }) => id,
+      ),
+    ).toEqual([createdPredicateGroupId]);
+  });
+
+  it('should upsert predicates with predicate groups', async () => {
+    const input: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [],
+      predicateGroups: [
+        {
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+        },
+      ],
+    };
+
+    const { data: groupData } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input,
+    });
+
+    const groupId =
+      groupData.upsertRowLevelPermissionPredicates.predicateGroups[0]?.id;
+
+    jestExpectToBeDefined(groupId);
+
+    const predicateInput: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [
+        {
+          fieldMetadataId: companyNameFieldMetadataId,
+          operand: RowLevelPermissionPredicateOperand.CONTAINS,
+          rowLevelPermissionPredicateGroupId: groupId,
+          positionInRowLevelPermissionPredicateGroup: 0,
+        },
+      ],
+      predicateGroups: [
+        {
+          id: groupId,
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+        },
+      ],
+    };
+
+    const { data: predicateData } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input: predicateInput,
+    });
+
+    expect(
+      predicateData.upsertRowLevelPermissionPredicates.predicates,
+    ).toHaveLength(1);
+    expect(
+      predicateData.upsertRowLevelPermissionPredicates.predicates[0],
+    ).toMatchObject({
+      rowLevelPermissionPredicateGroupId: groupId,
+      positionInRowLevelPermissionPredicateGroup: 0,
+    });
+  });
+
+  it('should create groups and predicates referencing those groups in a single call', async () => {
+    const groupId = v4();
+
+    const input: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [
+        {
+          fieldMetadataId: companyNameFieldMetadataId,
+          operand: RowLevelPermissionPredicateOperand.CONTAINS,
+          rowLevelPermissionPredicateGroupId: groupId,
+          positionInRowLevelPermissionPredicateGroup: 0,
+        },
+      ],
+      predicateGroups: [
+        {
+          id: groupId,
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+        },
+      ],
+    };
+
+    const { data } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input,
+    });
+
+    expect(data.upsertRowLevelPermissionPredicates.predicates).toHaveLength(1);
+    expect(
+      data.upsertRowLevelPermissionPredicates.predicateGroups,
+    ).toHaveLength(1);
+    expect(
+      data.upsertRowLevelPermissionPredicates.predicateGroups[0],
+    ).toMatchObject({
+      id: groupId,
+      objectMetadataId: companyObjectMetadataId,
+      logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+    });
+    expect(data.upsertRowLevelPermissionPredicates.predicates[0]).toMatchObject(
+      {
+        fieldMetadataId: companyNameFieldMetadataId,
+        rowLevelPermissionPredicateGroupId: groupId,
+        positionInRowLevelPermissionPredicateGroup: 0,
+      },
+    );
+  });
+
+  it('should create nested parent-child groups in a single call', async () => {
+    const parentGroupId = v4();
+    const childGroupId = v4();
+
+    const input: UpsertRowLevelPermissionPredicatesInput = {
+      roleId: createdRoleId,
+      objectMetadataId: companyObjectMetadataId,
+      predicates: [],
+      predicateGroups: [
+        {
+          id: parentGroupId,
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.AND,
+          parentRowLevelPermissionPredicateGroupId: null,
+        },
+        {
+          id: childGroupId,
+          objectMetadataId: companyObjectMetadataId,
+          logicalOperator: RowLevelPermissionPredicateGroupLogicalOperator.OR,
+          parentRowLevelPermissionPredicateGroupId: parentGroupId,
+        },
+      ],
+    };
+
+    const { data } = await upsertRowLevelPermissionPredicates({
+      expectToFail: false,
+      input,
+    });
+
+    expect(
+      data.upsertRowLevelPermissionPredicates.predicateGroups,
+    ).toHaveLength(2);
+
+    const parentGroup =
+      data.upsertRowLevelPermissionPredicates.predicateGroups.find(
+        (group: { id: string }) => group.id === parentGroupId,
+      );
+
+    const childGroup =
+      data.upsertRowLevelPermissionPredicates.predicateGroups.find(
+        (group: { id: string }) => group.id === childGroupId,
+      );
+
+    expect(parentGroup).toBeDefined();
+    expect(parentGroup?.parentRowLevelPermissionPredicateGroupId).toBeNull();
+    expect(parentGroup?.logicalOperator).toBe(
+      RowLevelPermissionPredicateGroupLogicalOperator.AND,
+    );
+
+    expect(childGroup).toBeDefined();
+    expect(childGroup?.parentRowLevelPermissionPredicateGroupId).toBe(
+      parentGroupId,
+    );
+    expect(childGroup?.logicalOperator).toBe(
+      RowLevelPermissionPredicateGroupLogicalOperator.OR,
+    );
+  });
+});

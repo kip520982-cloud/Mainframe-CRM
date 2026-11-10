@@ -1,0 +1,344 @@
+import { createOneLogicFunction } from 'test/integration/metadata/suites/logic-function/utils/create-logic-function.util';
+import { deleteLogicFunction } from 'test/integration/metadata/suites/logic-function/utils/delete-logic-function.util';
+import { executeLogicFunction } from 'test/integration/metadata/suites/logic-function/utils/execute-logic-function.util';
+import { updateLogicFunctionSource } from 'test/integration/metadata/suites/logic-function/utils/update-logic-function-source.util';
+
+import { LogicFunctionExecutionStatus } from 'src/engine/metadata-modules/logic-function/dtos/logic-function-execution-result.dto';
+import { LogicFunctionExecutionMode } from 'src/engine/metadata-modules/logic-function/logic-function.entity';
+
+const DEFAULT_TEMPLATE_FUNCTION_CODE = `export const main = async (params: { a: string; b: number }): Promise<object> => {
+  return { message: \`Toto: \${params.a} and \${params.b}\` };
+};`;
+
+const EXTERNAL_PACKAGES_FUNCTION_CODE = `import groupBy from 'lodash.groupby';
+
+export const main = async (params: { items: Array<{ category: string; name: string }> }): Promise<object> => {
+  const grouped = groupBy(params.items, 'category');
+  return {
+    grouped,
+    categories: Object.keys(grouped),
+  };
+};`;
+
+const ERROR_FUNCTION_CODE = `export const main = async (params: { shouldFail: boolean }): Promise<object> => {
+  if (params.shouldFail) {
+    throw new Error('Intentional test error');
+  }
+  return { success: true };
+};`;
+
+const RUNTIME_FUNCTION_CODE = `import { execSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+const attempt = (operation: () => unknown): string => {
+  try {
+    operation();
+
+    return 'allowed';
+  } catch (error) {
+    return error instanceof Error && 'code' in error
+      ? String(error.code)
+      : 'failed';
+  }
+};
+
+export const main = async (): Promise<object> => ({
+  hasServerVariables: 'PG_DATABASE_URL' in process.env,
+  hasApplicationId: 'APPLICATION_ID' in process.env,
+  writeTemporaryFile: attempt(() =>
+    writeFileSync(join(tmpdir(), 'file.txt'), 'content'),
+  ),
+  readServerFile: attempt(() => readFileSync('/etc/hosts')),
+  spawnProcess: attempt(() => execSync('true')),
+});`;
+
+describe('Logic Function Execution', () => {
+  const createdFunctionIds: string[] = [];
+
+  afterAll(async () => {
+    for (const functionId of createdFunctionIds) {
+      try {
+        await deleteLogicFunction({
+          input: { id: functionId },
+          expectToFail: false,
+        });
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+  });
+
+  it('should execute the default logic function template', async () => {
+    const { data: createData } = await createOneLogicFunction({
+      input: {
+        name: 'Test Default Function',
+      },
+      expectToFail: false,
+    });
+
+    const functionId = createData?.createOneLogicFunction?.id;
+
+    expect(functionId).toBeDefined();
+    expect(createData?.createOneLogicFunction?.executionMode).toBe(
+      LogicFunctionExecutionMode.LIVE,
+    );
+    createdFunctionIds.push(functionId);
+
+    await updateLogicFunctionSource({
+      input: {
+        id: createData.createOneLogicFunction.id,
+        update: {
+          sourceHandlerCode: DEFAULT_TEMPLATE_FUNCTION_CODE,
+        },
+      },
+      expectToFail: false,
+    });
+
+    // Execute with the default template's expected params: { a: string, b: number }
+    const { data: executeData } = await executeLogicFunction({
+      input: {
+        id: functionId,
+        payload: { a: 'hello', b: 42 },
+      },
+      expectToFail: false,
+    });
+
+    const result = executeData?.executeOneLogicFunction;
+
+    if (result?.status !== LogicFunctionExecutionStatus.SUCCESS) {
+      throw new Error(JSON.stringify(result?.error, null, 2));
+    }
+
+    expect(result?.status).toBe(LogicFunctionExecutionStatus.SUCCESS);
+    expect(result?.data).toMatchObject({
+      message: 'Toto: hello and 42',
+    });
+    expect(result?.duration).toBeGreaterThan(0);
+  });
+
+  it('should execute a function with external packages (lodash.groupby)', async () => {
+    const { data: createData } = await createOneLogicFunction({
+      input: {
+        name: 'External Packages Test',
+      },
+      expectToFail: false,
+    });
+
+    const functionId = createData?.createOneLogicFunction?.id;
+
+    expect(functionId).toBeDefined();
+    createdFunctionIds.push(functionId);
+
+    await updateLogicFunctionSource({
+      input: {
+        id: createData.createOneLogicFunction.id,
+        update: {
+          sourceHandlerCode: EXTERNAL_PACKAGES_FUNCTION_CODE,
+        },
+      },
+      expectToFail: false,
+    });
+
+    const { data: executeData } = await executeLogicFunction({
+      input: {
+        id: functionId,
+        payload: {
+          items: [
+            { category: 'fruit', name: 'apple' },
+            { category: 'vegetable', name: 'carrot' },
+            { category: 'fruit', name: 'banana' },
+          ],
+        },
+      },
+      expectToFail: false,
+    });
+
+    const result = executeData?.executeOneLogicFunction;
+
+    if (result?.status !== LogicFunctionExecutionStatus.SUCCESS) {
+      throw new Error(JSON.stringify(result?.error, null, 2));
+    }
+
+    expect(result?.status).toBe(LogicFunctionExecutionStatus.SUCCESS);
+
+    expect(result?.data).toMatchObject({
+      grouped: {
+        fruit: [
+          { category: 'fruit', name: 'apple' },
+          { category: 'fruit', name: 'banana' },
+        ],
+        vegetable: [{ category: 'vegetable', name: 'carrot' }],
+      },
+      categories: expect.arrayContaining(['fruit', 'vegetable']),
+    });
+  });
+
+  it('should run with the function variables and its own temporary directory', async () => {
+    const { data: createData } = await createOneLogicFunction({
+      input: {
+        name: 'Runtime Test Function',
+        source: {
+          sourceHandlerCode: RUNTIME_FUNCTION_CODE,
+          handlerName: 'main',
+        },
+      },
+      expectToFail: false,
+    });
+
+    const functionId = createData?.createOneLogicFunction?.id;
+
+    expect(functionId).toBeDefined();
+    createdFunctionIds.push(functionId);
+
+    const { data: executeData } = await executeLogicFunction({
+      input: { id: functionId, payload: {} },
+      expectToFail: false,
+    });
+
+    const result = executeData?.executeOneLogicFunction;
+
+    if (result?.status !== LogicFunctionExecutionStatus.SUCCESS) {
+      throw new Error(JSON.stringify(result?.error, null, 2));
+    }
+
+    expect(result?.data).toEqual({
+      hasServerVariables: false,
+      hasApplicationId: true,
+      writeTemporaryFile: 'allowed',
+      readServerFile: 'ERR_ACCESS_DENIED',
+      spawnProcess: 'ERR_ACCESS_DENIED',
+    });
+  });
+
+  it('should create logic function without source', async () => {
+    const { data: createData } = await createOneLogicFunction({
+      input: {
+        name: 'Test Default Function',
+      },
+      expectToFail: false,
+    });
+
+    const functionId = createData?.createOneLogicFunction?.id;
+
+    expect(functionId).toBeDefined();
+    createdFunctionIds.push(functionId);
+
+    // Execute with the default template's expected params: { a: string, b: number }
+    const { data: executeData } = await executeLogicFunction({
+      input: {
+        id: functionId,
+        payload: { a: 'hello', b: 42 },
+      },
+      expectToFail: false,
+    });
+
+    const result = executeData?.executeOneLogicFunction;
+
+    if (result?.status !== LogicFunctionExecutionStatus.SUCCESS) {
+      throw new Error(JSON.stringify(result?.error, null, 2));
+    }
+
+    expect(result?.status).toBe(LogicFunctionExecutionStatus.SUCCESS);
+    expect(result?.data).toMatchObject({
+      message: 'Hello, input: hello and 42',
+    });
+    expect(result?.duration).toBeGreaterThan(0);
+  });
+
+  it('should create logic function with source', async () => {
+    const { data: createData } = await createOneLogicFunction({
+      input: {
+        name: 'Test Default Function',
+        source: {
+          sourceHandlerCode: DEFAULT_TEMPLATE_FUNCTION_CODE,
+          handlerName: 'main',
+        },
+      },
+      expectToFail: false,
+    });
+
+    const functionId = createData?.createOneLogicFunction?.id;
+
+    expect(functionId).toBeDefined();
+    createdFunctionIds.push(functionId);
+
+    // Execute with the default template's expected params: { a: string, b: number }
+    const { data: executeData } = await executeLogicFunction({
+      input: {
+        id: functionId,
+        payload: { a: 'hello', b: 42 },
+      },
+      expectToFail: false,
+    });
+
+    const result = executeData?.executeOneLogicFunction;
+
+    if (result?.status !== LogicFunctionExecutionStatus.SUCCESS) {
+      throw new Error(JSON.stringify(result?.error, null, 2));
+    }
+
+    expect(result?.status).toBe(LogicFunctionExecutionStatus.SUCCESS);
+    expect(result?.data).toMatchObject({
+      message: 'Toto: hello and 42',
+    });
+    expect(result?.duration).toBeGreaterThan(0);
+  });
+
+  it('should handle errors thrown by logic functions', async () => {
+    const { data: createData } = await createOneLogicFunction({
+      input: {
+        name: 'Error Test Function',
+      },
+      expectToFail: false,
+    });
+
+    const functionId = createData?.createOneLogicFunction?.id;
+
+    expect(functionId).toBeDefined();
+    createdFunctionIds.push(functionId);
+
+    await updateLogicFunctionSource({
+      input: {
+        id: createData.createOneLogicFunction.id,
+        update: {
+          sourceHandlerCode: ERROR_FUNCTION_CODE,
+        },
+      },
+      expectToFail: false,
+    });
+
+    const { data: successData } = await executeLogicFunction({
+      input: {
+        id: functionId,
+        payload: { shouldFail: false },
+      },
+      expectToFail: false,
+    });
+
+    expect(successData?.executeOneLogicFunction?.status).toBe(
+      LogicFunctionExecutionStatus.SUCCESS,
+    );
+    expect(successData?.executeOneLogicFunction?.data).toMatchObject({
+      success: true,
+    });
+
+    const { data: errorData } = await executeLogicFunction({
+      input: {
+        id: functionId,
+        payload: { shouldFail: true },
+      },
+      expectToFail: false, // The GraphQL call succeeds, but the function execution fails
+    });
+
+    const errorResult = errorData?.executeOneLogicFunction;
+
+    expect(errorResult?.status).toBe(LogicFunctionExecutionStatus.ERROR);
+    expect(errorResult?.error).toMatchObject({
+      errorType: 'Error',
+      errorMessage: expect.stringContaining('Intentional test error'),
+    });
+    expect(errorResult?.data).toBeNull();
+  });
+});
