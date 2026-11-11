@@ -48,5 +48,11 @@ register_background_jobs() {
 setup_and_migrate_db
 register_background_jobs
 
+# Railway worker service sets TWENTY_ROLE=worker (same image as server).
+if [ "${TWENTY_ROLE}" = "worker" ]; then
+    echo "Starting Mainframe queue worker..."
+    exec node dist/queue-worker/queue-worker
+fi
+
 # Continue with the original Docker command
 exec "$@"

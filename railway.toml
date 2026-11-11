@@ -1,0 +1,12 @@
+# Shared build for Mainframe fork (not stock twentycrm/twenty).
+# Worker overrides start command to queue-worker in Railway service settings.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+healthcheckPath = "/healthz"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

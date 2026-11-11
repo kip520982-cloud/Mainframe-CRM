@@ -50,21 +50,19 @@ COPY ./packages/twenty-front-component-renderer /app/packages/twenty-front-compo
 COPY ./packages/twenty-ui /app/packages/twenty-ui
 COPY ./packages/twenty-sdk /app/packages/twenty-sdk
 
-RUN npx nx run twenty-server:lingui:extract && \
-    npx nx run twenty-server:lingui:compile && \
-    npx nx run twenty-emails:lingui:extract && \
+# Compile committed catalogs only — extract is host-side and burns build RAM/time.
+RUN npx nx run twenty-server:lingui:compile && \
     npx nx run twenty-emails:lingui:compile
 
 RUN npx nx run twenty-server:build
 
-RUN npx nx run twenty-front:lingui:extract && \
-    npx nx run twenty-front:lingui:compile
+RUN npx nx run twenty-front:lingui:compile
 
-# Lean production front build — no sourcemaps; keeps Railway under build deadlines.
+# Lean production front build — no sourcemaps; 8GB heap fits Railway builders better than 12GB.
 RUN CI=true \
     NODE_ENV=production \
     VITE_BUILD_SOURCEMAP=false \
-    NODE_OPTIONS="--max-old-space-size=12288" \
+    NODE_OPTIONS="--max-old-space-size=8192" \
     npx nx build twenty-front
 
 # Clean server build output (type declarations and compiled tests not needed at runtime)

@@ -4,4 +4,6 @@ export const DEFAULT_FEATURE_FLAGS = [
   FeatureFlagKey.IS_REST_METADATA_API_NEW_FORMAT_DIRECT,
   FeatureFlagKey.IS_AGENT_CHAT_DIRECT_MESSAGE_IDENTITY_ENABLED,
   FeatureFlagKey.IS_MESSAGE_ATTACHMENT_ENABLED,
+  // Mainframe cloud default: Inbox assistant tab ships for every new workspace.
+  FeatureFlagKey.IS_AI_CHAT_INBOX_ENABLED,
 ] as const satisfies FeatureFlagKey[];

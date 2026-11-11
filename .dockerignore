@@ -1,8 +1,11 @@
 .git
 .gitignore
 .env
+**/.env
+**/.env.*
 **/node_modules
 .nx/cache
+.nx/workspace-data
 **/dist
 # Only exclude Vite output dirs — not source folders named `build`
 # (twenty-sdk has src/front-component-renderer/build/).
@@ -15,3 +18,37 @@ voice-agent/.env
 .railway
 railway.json
 railway.toml
+
+# Packages and trees not needed for the production image
+packages/twenty-e2e-testing
+packages/twenty-website
+packages/twenty-docs
+packages/twenty-zapier
+packages/twenty-cli
+packages/twenty-apps
+packages/twenty-utils
+packages/create-twenty-app
+docs
+mockups
+.tmp
+agent-transcripts
+coverage
+**/*.md
+**/__stories__
+**/__mocks__
+**/*.stories.tsx
+**/*.stories.ts
+packages/twenty-server/test
+packages/twenty-front/src/**/*.test.ts
+packages/twenty-front/src/**/*.test.tsx
+packages/twenty-front/src/**/*.spec.ts
+packages/twenty-front/src/**/*.spec.tsx
+packages/twenty-server/src/**/*.spec.ts
+voice-agent
+.ai
+.claude
+.cursor
+.vscode
+.github
+**/.DS_Store
+*.log
