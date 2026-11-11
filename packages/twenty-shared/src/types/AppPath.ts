@@ -28,6 +28,7 @@ export enum AppPath {
   WorkflowIndexPage = '/workflows',
   EarpiecePage = '/earpiece',
   AnswerLinePage = '/answer-line',
+  DailyFinancePage = '/daily-finance',
   WorkflowCoreShowPage = '/workflow/:coreWorkflowId',
   AgentIndexPage = '/agents',
   AgentShowPage = '/agent/:agentId',

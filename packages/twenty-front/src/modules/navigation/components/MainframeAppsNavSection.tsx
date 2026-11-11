@@ -2,7 +2,13 @@ import { NavigationDrawerItem } from '@/ui/navigation/navigation-drawer/componen
 import { NavigationDrawerSection } from '@/ui/navigation/navigation-drawer/components/NavigationDrawerSection';
 import { isTrackerOverlayOpenState } from '@/tracker-overlay/states/isTrackerOverlayOpenState';
 import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
-import { IconBolt, IconCalendarTime, IconHeadphones, IconPhone } from 'twenty-ui/icon';
+import {
+  IconBolt,
+  IconCalendarTime,
+  IconChartBar,
+  IconHeadphones,
+  IconPhone,
+} from 'twenty-ui/icon';
 import { useNavigate } from 'react-router-dom';
 import { AppPath } from 'twenty-shared/types';
 import { doNotTranslate } from 'twenty-shared/i18n';
@@ -13,6 +19,11 @@ export const MainframeAppsNavSection = () => {
 
   return (
     <NavigationDrawerSection>
+      <NavigationDrawerItem
+        label={doNotTranslate('Daily Finance')}
+        Icon={IconChartBar}
+        onClick={() => navigate(AppPath.DailyFinancePage)}
+      />
       <NavigationDrawerItem
         label={doNotTranslate('Tracker')}
         Icon={IconCalendarTime}

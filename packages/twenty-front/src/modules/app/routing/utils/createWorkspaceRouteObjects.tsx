@@ -48,6 +48,12 @@ const AnswerLinePage = lazy(() =>
   })),
 );
 
+const DailyFinancePage = lazy(() =>
+  import('~/pages/daily-finance/DailyFinancePage').then((module) => ({
+    default: module.DailyFinancePage,
+  })),
+);
+
 const WorkflowCoreShowPage = lazy(() =>
   import('~/pages/object-core/WorkflowCoreShowPage').then((module) => ({
     default: module.WorkflowCoreShowPage,
@@ -133,6 +139,15 @@ export const createWorkspaceRouteObjects = ({
       element: (
         <LazyRoute fallback={<RecordIndexSkeletonLoader />}>
           <AnswerLinePage />
+        </LazyRoute>
+      ),
+      handle: { workspaceSurfaces: MAIN_AND_SIDE_PANEL },
+    },
+    {
+      path: AppPath.DailyFinancePage,
+      element: (
+        <LazyRoute fallback={<RecordIndexSkeletonLoader />}>
+          <DailyFinancePage />
         </LazyRoute>
       ),
       handle: { workspaceSurfaces: MAIN_AND_SIDE_PANEL },

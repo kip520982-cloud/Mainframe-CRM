@@ -77,6 +77,12 @@ export class BillingCreditAllowanceService {
   async getUserCreditsFallback(
     workspaceId: string,
   ): Promise<UserCreditsFallback> {
+    // Self-host (no Stripe): personal AI_USER_CREDITS_LIMIT must stop chats,
+    // not fall through to imaginary workspace credits.
+    if (!this.twentyConfigService.get('IS_BILLING_ENABLED')) {
+      return UserCreditsFallback.STOP;
+    }
+
     const subscription = await this.findCurrentBillingSubscription(workspaceId);
 
     return (
