@@ -1,6 +1,6 @@
 import { styled } from '@linaria/react';
-import { useLingui } from '@lingui/react/macro';
 import { themeCssVariables } from 'twenty-ui/theme';
+import { doNotTranslate } from 'twenty-shared/i18n';
 
 const StyledContainer = styled.div`
   color: ${themeCssVariables.font.color.secondary};
@@ -55,13 +55,13 @@ const StyledLink = styled.a`
 `;
 
 export const AnswerLinePage = () => {
-  const { t } = useLingui();
-
   return (
     <StyledContainer>
-      <StyledTitle>{t`ElevenLabs UI components`}</StyledTitle>
+      <StyledTitle>{doNotTranslate('ElevenLabs UI components')}</StyledTitle>
       <div>
-        {t`Shadcn-based components for rapid development of ElevenLabs voice agent frontends. Source:`}{' '}
+        {doNotTranslate(
+          'Shadcn-based components for rapid development of ElevenLabs voice agent frontends. Source:',
+        )}{' '}
         <StyledLink
           href="https://ui.elevenlabs.io/docs"
           target="_blank"
@@ -71,46 +71,58 @@ export const AnswerLinePage = () => {
         </StyledLink>
       </div>
       <div>
-        <StyledSectionTitle>{t`Overview`}</StyledSectionTitle>
+        <StyledSectionTitle>{doNotTranslate('Overview')}</StyledSectionTitle>
         <div>
-          {t`ElevenLabs UI is a component library in the style of shadcn/ui for building voice agent frontends on the ElevenLabs platform. Components are installed directly into the project source, so the code is fully owned and customizable.`}
+          {doNotTranslate(
+            'ElevenLabs UI is a component library in the style of shadcn/ui for building voice agent frontends on the ElevenLabs platform. Components are installed directly into the project source, so the code is fully owned and customizable.',
+          )}
         </div>
       </div>
       <div>
-        <StyledSectionTitle>{t`Installation`}</StyledSectionTitle>
-        <div>{t`Agents CLI:`}</div>
+        <StyledSectionTitle>{doNotTranslate('Installation')}</StyledSectionTitle>
+        <div>{doNotTranslate('Agents CLI:')}</div>
         <StyledCodeBlock>
           npx @elevenlabs/cli@latest components add orb
         </StyledCodeBlock>
-        <div>{t`shadcn:`}</div>
+        <div>{doNotTranslate('shadcn:')}</div>
         <StyledCodeBlock>
           npx shadcn@latest add https://ui.elevenlabs.io/r/orb.json
         </StyledCodeBlock>
       </div>
       <div>
-        <StyledSectionTitle>{t`Prerequisites`}</StyledSectionTitle>
+        <StyledSectionTitle>
+          {doNotTranslate('Prerequisites')}
+        </StyledSectionTitle>
         <StyledList>
-          <li>{t`Node.js version 18 or later`}</li>
-          <li>{t`A Next.js project`}</li>
+          <li>{doNotTranslate('Node.js version 18 or later')}</li>
+          <li>{doNotTranslate('A Next.js project')}</li>
           <li>
-            {t`shadcn/ui set up in the project — running any install command sets it up automatically if it is not already`}
+            {doNotTranslate(
+              'shadcn/ui set up in the project — running any install command sets it up automatically if it is not already',
+            )}
           </li>
         </StyledList>
       </div>
       <div>
-        <StyledSectionTitle>{t`How installs work`}</StyledSectionTitle>
+        <StyledSectionTitle>
+          {doNotTranslate('How installs work')}
+        </StyledSectionTitle>
         <div>
-          {t`Both CLIs achieve the same result: the component code and any needed dependencies are downloaded into the project, usually under the components folder. A confirmation appears in the terminal once the files are added, and the component is ready to use.`}
+          {doNotTranslate(
+            'Both CLIs achieve the same result: the component code and any needed dependencies are downloaded into the project, usually under the components folder. A confirmation appears in the terminal once the files are added, and the component is ready to use.',
+          )}
         </div>
       </div>
       <div>
-        <StyledSectionTitle>{t`Known components`}</StyledSectionTitle>
+        <StyledSectionTitle>
+          {doNotTranslate('Known components')}
+        </StyledSectionTitle>
         <StyledTable>
           <tbody>
             <tr>
               <StyledCell>orb</StyledCell>
               <StyledCell>
-                {t`Animated voice-agent orb visualization`}
+                {doNotTranslate('Animated voice-agent orb visualization')}
               </StyledCell>
             </tr>
           </tbody>
