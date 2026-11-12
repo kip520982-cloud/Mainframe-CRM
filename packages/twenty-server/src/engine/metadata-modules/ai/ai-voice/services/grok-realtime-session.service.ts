@@ -1,5 +1,7 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 
+import { type GrokSessionInput } from 'src/engine/metadata-modules/ai/ai-voice/dtos/grok-session.input';
+
 type GrokClientSecretResponse = {
   value?: string;
   expires_at?: number;
@@ -12,21 +14,47 @@ export type GrokRealtimeSession = {
   model: string;
   voice: string;
   agentId: string | null;
+  instructions: string | null;
+  channel: 'assistant' | 'answer-line';
 };
+
+const DEFAULT_ASSISTANT_INSTRUCTIONS =
+  'You are the Mainframe CRM voice assistant. Keep replies short, clear, and conversational.';
+
+const DEFAULT_ANSWER_LINE_INSTRUCTIONS =
+  'You are the Mainframe Answer Line. Greet callers warmly, qualify the enquiry, capture a callback number if needed, and keep answers concise.';
 
 @Injectable()
 export class GrokRealtimeSessionService {
   private readonly logger = new Logger(GrokRealtimeSessionService.name);
 
-  async createBrowserSession(): Promise<GrokRealtimeSession> {
+  async createBrowserSession(
+    input: GrokSessionInput = {},
+  ): Promise<GrokRealtimeSession> {
     const apiKey = process.env.XAI_API_KEY || process.env.GROK_VOICE_API_KEY;
     if (!apiKey) {
       throw new ServiceUnavailableException('Grok voice is not configured');
     }
 
+    const channel = input.channel ?? 'assistant';
     const model = process.env.GROK_VOICE_MODEL || 'grok-voice-latest';
-    const voice = process.env.GROK_VOICE || 'eve';
-    const agentId = process.env.GROK_AGENT_ID || null;
+    const voice =
+      input.voice?.trim() ||
+      process.env.GROK_VOICE ||
+      'eve';
+
+    const envAgentId =
+      channel === 'answer-line'
+        ? process.env.GROK_ANSWER_LINE_AGENT_ID || process.env.GROK_AGENT_ID
+        : process.env.GROK_AGENT_ID;
+
+    const agentId = input.agentId?.trim() || envAgentId || null;
+    const instructions = agentId
+      ? null
+      : input.instructions?.trim() ||
+        (channel === 'answer-line'
+          ? DEFAULT_ANSWER_LINE_INSTRUCTIONS
+          : DEFAULT_ASSISTANT_INSTRUCTIONS);
 
     const response = await fetch('https://api.x.ai/v1/realtime/client_secrets', {
       method: 'POST',
@@ -51,6 +79,8 @@ export class GrokRealtimeSessionService {
       model,
       voice,
       agentId,
+      instructions,
+      channel,
     };
   }
 }

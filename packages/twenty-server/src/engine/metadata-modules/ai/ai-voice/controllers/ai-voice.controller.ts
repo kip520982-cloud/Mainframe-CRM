@@ -22,6 +22,7 @@ import { AuthUserWorkspaceId } from 'src/engine/decorators/auth/auth-user-worksp
 import { AuthWorkspace } from 'src/engine/decorators/auth/auth-workspace.decorator';
 import { AccessPolicyGuard } from 'src/engine/guards/access-policy.guard';
 import { JwtAuthGuard } from 'src/engine/guards/jwt-auth.guard';
+import { GrokSessionInput } from 'src/engine/metadata-modules/ai/ai-voice/dtos/grok-session.input';
 import { SpeakInput } from 'src/engine/metadata-modules/ai/ai-voice/dtos/speak.input';
 import { GrokRealtimeSessionService } from 'src/engine/metadata-modules/ai/ai-voice/services/grok-realtime-session.service';
 import {
@@ -68,8 +69,8 @@ export class AiVoiceController {
   // STT→LLM→TTS cascade and no lk CLI on the server image.
   @Post('grok-session')
   @HttpCode(200)
-  async getGrokSession() {
-    return this.grokRealtimeSessionService.createBrowserSession();
+  async getGrokSession(@Body() body: GrokSessionInput = {}) {
+    return this.grokRealtimeSessionService.createBrowserSession(body ?? {});
   }
 
   @Post('livekit-token')

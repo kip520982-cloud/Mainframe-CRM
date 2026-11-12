@@ -30,6 +30,15 @@ type GrokSessionPayload = {
   model: string;
   voice: string;
   agentId: string | null;
+  instructions: string | null;
+  channel: 'assistant' | 'answer-line';
+};
+
+export type StartVoiceCallOptions = {
+  channel?: 'assistant' | 'answer-line';
+  agentId?: string;
+  voice?: string;
+  instructions?: string;
 };
 
 let listener: VoiceCallListener | null = null;
@@ -156,7 +165,9 @@ export const stopVoiceCall = () => {
   cleanupCall();
 };
 
-export const startVoiceCall = async (): Promise<void> => {
+export const startVoiceCall = async (
+  options: StartVoiceCallOptions = {},
+): Promise<void> => {
   if (socket !== null) {
     return;
   }
@@ -177,8 +188,15 @@ export const startVoiceCall = async (): Promise<void> => {
     method: 'POST',
     credentials: 'include',
     headers: {
+      'Content-Type': 'application/json',
       [SESSION_COOKIE_OPT_IN_HEADER_NAME]: '1',
     },
+    body: JSON.stringify({
+      channel: options.channel ?? 'assistant',
+      agentId: options.agentId,
+      voice: options.voice,
+      instructions: options.instructions,
+    }),
   });
 
   if (!response.ok) {
@@ -200,6 +218,7 @@ export const startVoiceCall = async (): Promise<void> => {
 
     nextSocket.addEventListener('open', async () => {
       try {
+        // Console agents own persona/voice server-side — do not session.update them.
         if (!session.agentId) {
           nextSocket.send(
             JSON.stringify({
@@ -207,6 +226,7 @@ export const startVoiceCall = async (): Promise<void> => {
               session: {
                 voice: session.voice || 'eve',
                 instructions:
+                  session.instructions ||
                   'You are the Mainframe CRM voice assistant. Keep replies short, clear, and conversational.',
                 turn_detection: { type: 'server_vad' },
                 audio: {

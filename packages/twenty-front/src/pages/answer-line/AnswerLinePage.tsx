@@ -1,133 +1,261 @@
-import { styled } from '@linaria/react';
-import { themeCssVariables } from 'twenty-ui/theme';
-import { doNotTranslate } from 'twenty-shared/i18n';
+import { useState } from 'react';
 
-const StyledContainer = styled.div`
+import { answerLineAgentConfigState } from '@/answer-line/states/answerLineAgentConfigState';
+import {
+  startVoiceCall,
+  stopVoiceCall,
+} from '@/ai/voice/call/voiceCallRoom';
+import {
+  voiceCallErrorState,
+  voiceCallStatusState,
+} from '@/ai/voice/call/voiceCallState';
+import { AiVoiceCallPanel } from '@/ai/voice/components/AiVoiceCallPanel';
+import { useAtomState } from '@/ui/utilities/state/jotai/hooks/useAtomState';
+import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
+import { styled } from '@linaria/react';
+import { doNotTranslate } from 'twenty-shared/i18n';
+import { themeCssVariables } from 'twenty-ui/theme';
+
+const StyledPage = styled.div`
   color: ${themeCssVariables.font.color.secondary};
   display: flex;
   flex-direction: column;
-  gap: ${themeCssVariables.spacing[4]};
+  gap: ${themeCssVariables.spacing[5]};
   height: 100%;
-  max-width: 860px;
+  max-width: 920px;
   overflow-y: auto;
   padding: ${themeCssVariables.spacing[6]};
   width: 100%;
 `;
 
-const StyledTitle = styled.div`
+const StyledTitle = styled.h1`
   color: ${themeCssVariables.font.color.primary};
   font-size: ${themeCssVariables.font.size.xl};
   font-weight: ${themeCssVariables.font.weight.semiBold};
+  margin: 0;
 `;
 
-const StyledSectionTitle = styled.div`
+const StyledLead = styled.p`
+  margin: 0;
+`;
+
+const StyledCard = styled.section`
+  background: ${themeCssVariables.background.secondary};
+  border: 1px solid ${themeCssVariables.border.color.medium};
+  border-radius: ${themeCssVariables.border.radius.md};
+  display: flex;
+  flex-direction: column;
+  gap: ${themeCssVariables.spacing[3]};
+  padding: ${themeCssVariables.spacing[4]};
+`;
+
+const StyledCardTitle = styled.h2`
   color: ${themeCssVariables.font.color.primary};
   font-size: ${themeCssVariables.font.size.md};
   font-weight: ${themeCssVariables.font.weight.semiBold};
+  margin: 0;
 `;
 
-const StyledCodeBlock = styled.pre`
-  background: ${themeCssVariables.background.secondary};
-  border-radius: ${themeCssVariables.border.radius.sm};
-  font-family: ${themeCssVariables.code.font.family};
+const StyledLabel = styled.label`
+  color: ${themeCssVariables.font.color.secondary};
+  display: flex;
+  flex-direction: column;
   font-size: ${themeCssVariables.font.size.sm};
-  margin: 0;
-  overflow-x: auto;
-  padding: ${themeCssVariables.spacing[3]};
+  gap: ${themeCssVariables.spacing[1]};
 `;
 
-const StyledList = styled.ul`
-  margin: 0;
-  padding-left: ${themeCssVariables.spacing[5]};
-`;
-
-const StyledTable = styled.table`
-  border-collapse: collapse;
-`;
-
-const StyledCell = styled.td`
-  border: 1px solid ${themeCssVariables.border.color.light};
+const StyledInput = styled.input`
+  background: ${themeCssVariables.background.primary};
+  border: 1px solid ${themeCssVariables.border.color.medium};
+  border-radius: ${themeCssVariables.border.radius.sm};
+  color: ${themeCssVariables.font.color.primary};
+  font: inherit;
   padding: ${themeCssVariables.spacing[2]} ${themeCssVariables.spacing[3]};
+`;
+
+const StyledTextarea = styled.textarea`
+  background: ${themeCssVariables.background.primary};
+  border: 1px solid ${themeCssVariables.border.color.medium};
+  border-radius: ${themeCssVariables.border.radius.sm};
+  color: ${themeCssVariables.font.color.primary};
+  font: inherit;
+  min-height: 140px;
+  padding: ${themeCssVariables.spacing[2]} ${themeCssVariables.spacing[3]};
+  resize: vertical;
+`;
+
+const StyledRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${themeCssVariables.spacing[2]};
+`;
+
+const StyledButton = styled.button<{ $primary?: boolean }>`
+  background: ${({ $primary }) =>
+    $primary
+      ? themeCssVariables.color.blue
+      : themeCssVariables.background.transparent.medium};
+  border: 1px solid ${themeCssVariables.border.color.medium};
+  border-radius: ${themeCssVariables.border.radius.sm};
+  color: ${({ $primary }) =>
+    $primary ? themeCssVariables.font.color.inverted : themeCssVariables.font.color.primary};
+  cursor: pointer;
+  font: inherit;
+  font-weight: ${themeCssVariables.font.weight.medium};
+  padding: ${themeCssVariables.spacing[2]} ${themeCssVariables.spacing[3]};
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
 `;
 
 const StyledLink = styled.a`
   color: ${themeCssVariables.color.blue};
 `;
 
+const StyledStatus = styled.div`
+  color: ${themeCssVariables.font.color.primary};
+  font-size: ${themeCssVariables.font.size.sm};
+`;
+
+const StyledError = styled.div`
+  color: ${themeCssVariables.color.red};
+  font-size: ${themeCssVariables.font.size.sm};
+`;
+
+const StyledHint = styled.p`
+  color: ${themeCssVariables.font.color.tertiary};
+  font-size: ${themeCssVariables.font.size.sm};
+  margin: 0;
+`;
+
 export const AnswerLinePage = () => {
+  const [config, setConfig] = useAtomState(answerLineAgentConfigState);
+  const voiceCallStatus = useAtomStateValue(voiceCallStatusState);
+  const voiceCallError = useAtomStateValue(voiceCallErrorState);
+  const [saveNotice, setSaveNotice] = useState('');
+
+  const isLive = voiceCallStatus === 'active' || voiceCallStatus === 'connecting';
+
+  const updateField = <TKey extends keyof typeof config>(
+    key: TKey,
+    value: (typeof config)[TKey],
+  ) => {
+    setConfig({ ...config, [key]: value });
+    setSaveNotice(doNotTranslate('Saved in this browser'));
+  };
+
+  const handleTestCall = () => {
+    void startVoiceCall({
+      channel: 'answer-line',
+      agentId: config.agentId.trim() || undefined,
+      voice: config.voice.trim() || undefined,
+      instructions: config.instructions,
+    }).catch(() => {
+      stopVoiceCall();
+    });
+  };
+
   return (
-    <StyledContainer>
-      <StyledTitle>{doNotTranslate('ElevenLabs UI components')}</StyledTitle>
+    <StyledPage>
+      <AiVoiceCallPanel />
       <div>
-        {doNotTranslate(
-          'Shadcn-based components for rapid development of ElevenLabs voice agent frontends. Source:',
-        )}{' '}
-        <StyledLink
-          href="https://ui.elevenlabs.io/docs"
-          target="_blank"
-          rel="noreferrer"
-        >
-          ui.elevenlabs.io/docs
-        </StyledLink>
-      </div>
-      <div>
-        <StyledSectionTitle>{doNotTranslate('Overview')}</StyledSectionTitle>
-        <div>
+        <StyledTitle>{doNotTranslate('Answer Line')}</StyledTitle>
+        <StyledLead>
           {doNotTranslate(
-            'ElevenLabs UI is a component library in the style of shadcn/ui for building voice agent frontends on the ElevenLabs platform. Components are installed directly into the project source, so the code is fully owned and customizable.',
+            'In-CRM builder for your phone answer agent. Keeps your trained xAI Voice Agent and runs it on Grok speech-to-speech inside Mainframe.',
           )}
-        </div>
+        </StyledLead>
       </div>
-      <div>
-        <StyledSectionTitle>{doNotTranslate('Installation')}</StyledSectionTitle>
-        <div>{doNotTranslate('Agents CLI:')}</div>
-        <StyledCodeBlock>
-          npx @elevenlabs/cli@latest components add orb
-        </StyledCodeBlock>
-        <div>{doNotTranslate('shadcn:')}</div>
-        <StyledCodeBlock>
-          npx shadcn@latest add https://ui.elevenlabs.io/r/orb.json
-        </StyledCodeBlock>
-      </div>
-      <div>
-        <StyledSectionTitle>
-          {doNotTranslate('Prerequisites')}
-        </StyledSectionTitle>
-        <StyledList>
-          <li>{doNotTranslate('Node.js version 18 or later')}</li>
-          <li>{doNotTranslate('A Next.js project')}</li>
-          <li>
-            {doNotTranslate(
-              'shadcn/ui set up in the project — running any install command sets it up automatically if it is not already',
-            )}
-          </li>
-        </StyledList>
-      </div>
-      <div>
-        <StyledSectionTitle>
-          {doNotTranslate('How installs work')}
-        </StyledSectionTitle>
-        <div>
+
+      <StyledCard>
+        <StyledCardTitle>{doNotTranslate('Agent')}</StyledCardTitle>
+        <StyledLabel>
+          {doNotTranslate('Display name')}
+          <StyledInput
+            value={config.name}
+            onChange={(event) => updateField('name', event.target.value)}
+          />
+        </StyledLabel>
+        <StyledLabel>
+          {doNotTranslate('xAI agent ID')}
+          <StyledInput
+            value={config.agentId}
+            onChange={(event) => updateField('agentId', event.target.value)}
+            placeholder="agent_…"
+          />
+        </StyledLabel>
+        <StyledHint>
           {doNotTranslate(
-            'Both CLIs achieve the same result: the component code and any needed dependencies are downloaded into the project, usually under the components folder. A confirmation appears in the terminal once the files are added, and the component is ready to use.',
+            'Use your Voice Agent Builder agent to keep the trained persona, knowledge, and tools. Leave blank to run raw grok-voice-latest with the instructions below.',
           )}
-        </div>
-      </div>
-      <div>
-        <StyledSectionTitle>
-          {doNotTranslate('Known components')}
-        </StyledSectionTitle>
-        <StyledTable>
-          <tbody>
-            <tr>
-              <StyledCell>orb</StyledCell>
-              <StyledCell>
-                {doNotTranslate('Animated voice-agent orb visualization')}
-              </StyledCell>
-            </tr>
-          </tbody>
-        </StyledTable>
-      </div>
-    </StyledContainer>
+        </StyledHint>
+        <StyledLabel>
+          {doNotTranslate('Voice')}
+          <StyledInput
+            value={config.voice}
+            onChange={(event) => updateField('voice', event.target.value)}
+            placeholder="eve"
+          />
+        </StyledLabel>
+        <StyledLabel>
+          {doNotTranslate('Instructions (used only when no agent ID)')}
+          <StyledTextarea
+            value={config.instructions}
+            onChange={(event) => updateField('instructions', event.target.value)}
+          />
+        </StyledLabel>
+        <StyledRow>
+          <StyledButton
+            type="button"
+            $primary
+            disabled={isLive}
+            onClick={handleTestCall}
+          >
+            {doNotTranslate('Test speech-to-speech call')}
+          </StyledButton>
+          <StyledButton
+            type="button"
+            disabled={!isLive}
+            onClick={() => stopVoiceCall()}
+          >
+            {doNotTranslate('Hang up')}
+          </StyledButton>
+          <StyledButton
+            type="button"
+            onClick={() =>
+              window.open(config.consoleUrl || 'https://console.x.ai/', '_blank')
+            }
+          >
+            {doNotTranslate('Open xAI Agent Builder')}
+          </StyledButton>
+        </StyledRow>
+        <StyledStatus>
+          {doNotTranslate('Call status:')} {voiceCallStatus}
+          {saveNotice ? ` · ${saveNotice}` : ''}
+        </StyledStatus>
+        {voiceCallError ? <StyledError>{voiceCallError}</StyledError> : null}
+      </StyledCard>
+
+      <StyledCard>
+        <StyledCardTitle>{doNotTranslate('How this fits')}</StyledCardTitle>
+        <StyledHint>
+          {doNotTranslate(
+            'Chat assistant phone button and Answer Line both use Grok speech-to-speech. Deep training (docs, tools, guardrails) stays in xAI Voice Agent Builder; Mainframe stores the agent link and lets you test calls here.',
+          )}
+        </StyledHint>
+        <StyledHint>
+          {doNotTranslate('Builder console:')}{' '}
+          <StyledLink
+            href={config.consoleUrl || 'https://console.x.ai/'}
+            target="_blank"
+            rel="noreferrer"
+          >
+            console.x.ai
+          </StyledLink>
+        </StyledHint>
+      </StyledCard>
+    </StyledPage>
   );
 };
