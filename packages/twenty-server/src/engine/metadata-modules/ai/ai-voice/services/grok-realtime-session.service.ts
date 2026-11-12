@@ -1,5 +1,9 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 
+import {
+  GROK_ANSWER_LINE_VOICE_INSTRUCTIONS,
+  GROK_ASSISTANT_VOICE_INSTRUCTIONS,
+} from 'src/engine/metadata-modules/ai/ai-voice/constants/grok-voice-instructions';
 import { type GrokSessionInput } from 'src/engine/metadata-modules/ai/ai-voice/dtos/grok-session.input';
 
 type GrokClientSecretResponse = {
@@ -18,12 +22,6 @@ export type GrokRealtimeSession = {
   channel: 'assistant' | 'answer-line';
 };
 
-const DEFAULT_ASSISTANT_INSTRUCTIONS =
-  'You are the Mainframe CRM voice assistant. Keep replies short, clear, and conversational.';
-
-const DEFAULT_ANSWER_LINE_INSTRUCTIONS =
-  'You are the Mainframe Answer Line. Greet callers warmly, qualify the enquiry, capture a callback number if needed, and keep answers concise.';
-
 @Injectable()
 export class GrokRealtimeSessionService {
   private readonly logger = new Logger(GrokRealtimeSessionService.name);
@@ -41,20 +39,17 @@ export class GrokRealtimeSessionService {
     const voice =
       input.voice?.trim() ||
       process.env.GROK_VOICE ||
-      'nejdfbmfnm3s'; // Kieran S custom voice
+      'nejdfbmfnm3s';
 
-    const envAgentId =
-      channel === 'answer-line'
-        ? process.env.GROK_ANSWER_LINE_AGENT_ID || process.env.GROK_AGENT_ID
-        : process.env.GROK_AGENT_ID;
-
-    const agentId = input.agentId?.trim() || envAgentId || null;
+    // Only use a console agent when the client explicitly sends an id.
+    // Env agent ids used to wipe instructions and leave a greeting-only agent.
+    const agentId = input.agentId?.trim() || null;
     const instructions = agentId
       ? null
       : input.instructions?.trim() ||
         (channel === 'answer-line'
-          ? DEFAULT_ANSWER_LINE_INSTRUCTIONS
-          : DEFAULT_ASSISTANT_INSTRUCTIONS);
+          ? GROK_ANSWER_LINE_VOICE_INSTRUCTIONS
+          : GROK_ASSISTANT_VOICE_INSTRUCTIONS);
 
     const response = await fetch('https://api.x.ai/v1/realtime/client_secrets', {
       method: 'POST',

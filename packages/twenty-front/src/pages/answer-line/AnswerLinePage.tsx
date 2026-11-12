@@ -164,7 +164,7 @@ export const AnswerLinePage = () => {
         <StyledTitle>{doNotTranslate('Answer Line')}</StyledTitle>
         <StyledLead>
           {doNotTranslate(
-            'In-CRM builder for your phone answer agent. Keeps your trained xAI Voice Agent and runs it on Grok speech-to-speech inside Mainframe.',
+            'In-CRM Answer Line builder. Personality, job, and call flow live here and run on Grok speech-to-speech with the Kieran voice.',
           )}
         </StyledLead>
       </div>
@@ -179,16 +179,16 @@ export const AnswerLinePage = () => {
           />
         </StyledLabel>
         <StyledLabel>
-          {doNotTranslate('xAI agent ID')}
+          {doNotTranslate('xAI agent ID (optional)')}
           <StyledInput
             value={config.agentId}
             onChange={(event) => updateField('agentId', event.target.value)}
-            placeholder="agent_…"
+            placeholder="leave blank to use instructions below"
           />
         </StyledLabel>
         <StyledHint>
           {doNotTranslate(
-            'Use your Voice Agent Builder agent to keep the trained persona, knowledge, and tools. Leave blank to run raw grok-voice-latest with the instructions + voice below. If an agent ID is set, pick Kieran as that agent’s voice in the xAI console too — console agents own voice server-side.',
+            'Leave agent ID blank so Mainframe owns the persona and job (recommended). If you paste a Voice Agent Builder id, that console agent takes over and these instructions are ignored.',
           )}
         </StyledHint>
         <StyledLabel>
@@ -200,7 +200,7 @@ export const AnswerLinePage = () => {
           />
         </StyledLabel>
         <StyledLabel>
-          {doNotTranslate('Instructions (used only when no agent ID)')}
+          {doNotTranslate('Personality, job & call flow')}
           <StyledTextarea
             value={config.instructions}
             onChange={(event) => updateField('instructions', event.target.value)}

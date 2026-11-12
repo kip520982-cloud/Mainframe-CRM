@@ -47,6 +47,7 @@ let audioContext: AudioContext | null = null;
 let mediaStream: MediaStream | null = null;
 let processor: ScriptProcessorNode | null = null;
 let sourceNode: MediaStreamAudioSourceNode | null = null;
+let silentGain: GainNode | null = null;
 let playbackTime = 0;
 let pendingPcm = new Uint8Array(0);
 let isMuted = false;
@@ -142,6 +143,11 @@ const cleanupCall = () => {
   } catch {
     // already torn down
   }
+  try {
+    silentGain?.disconnect();
+  } catch {
+    // already torn down
+  }
   mediaStream?.getTracks().forEach((track) => track.stop());
   try {
     socket?.close();
@@ -151,6 +157,7 @@ const cleanupCall = () => {
   void audioContext?.close();
   processor = null;
   sourceNode = null;
+  silentGain = null;
   mediaStream = null;
   socket = null;
   audioContext = null;
@@ -224,7 +231,7 @@ export const startVoiceCall = async (
             JSON.stringify({
               type: 'session.update',
               session: {
-                voice: session.voice || 'eve',
+                voice: session.voice || 'nejdfbmfnm3s',
                 instructions:
                   session.instructions ||
                   'You are the Mainframe CRM voice assistant. Keep replies short, clear, and conversational.',
@@ -236,6 +243,8 @@ export const startVoiceCall = async (
               },
             }),
           );
+          // Kick the opening turn so it greets, then asks what they need.
+          nextSocket.send(JSON.stringify({ type: 'response.create' }));
         }
 
         audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
@@ -249,6 +258,9 @@ export const startVoiceCall = async (
         });
         sourceNode = audioContext.createMediaStreamSource(mediaStream);
         processor = audioContext.createScriptProcessor(4096, 1, 1);
+        // Keep the processor graph alive without playing the mic into the speakers.
+        silentGain = audioContext.createGain();
+        silentGain.gain.value = 0;
         processor.onaudioprocess = (event) => {
           if (!socket || socket.readyState !== WebSocket.OPEN || isMuted) {
             return;
@@ -268,7 +280,8 @@ export const startVoiceCall = async (
           }
         };
         sourceNode.connect(processor);
-        processor.connect(audioContext.destination);
+        processor.connect(silentGain);
+        silentGain.connect(audioContext.destination);
         listener?.onStatusChange('active');
         resolve();
       } catch (error) {

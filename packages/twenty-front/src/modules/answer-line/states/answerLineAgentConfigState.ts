@@ -15,7 +15,8 @@ const isValidConfig = (value: AnswerLineAgentConfig): boolean =>
 
 export const answerLineAgentConfigState =
   createAtomState<AnswerLineAgentConfig>({
-    key: 'answer-line/answerLineAgentConfigState',
+    // key bump clears stale greeting-only configs from earlier localStorage
+    key: 'answer-line/answerLineAgentConfigState.v2',
     defaultValue: DEFAULT_ANSWER_LINE_AGENT_CONFIG,
     useLocalStorage: true,
     localStorageOptions: { getOnInit: true },

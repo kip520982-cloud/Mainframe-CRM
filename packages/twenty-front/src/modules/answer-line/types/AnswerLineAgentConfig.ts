@@ -1,3 +1,5 @@
+import { DEFAULT_ANSWER_LINE_INSTRUCTIONS } from '@/answer-line/constants/defaultAnswerLineInstructions';
+
 export type AnswerLineAgentConfig = {
   name: string;
   agentId: string;
@@ -6,11 +8,12 @@ export type AnswerLineAgentConfig = {
   consoleUrl: string;
 };
 
+// Empty agentId on purpose: CRM owns persona/job via instructions + Kieran voice.
+// Paste an xAI Voice Agent Builder id later if you want that trained agent instead.
 export const DEFAULT_ANSWER_LINE_AGENT_CONFIG: AnswerLineAgentConfig = {
   name: 'Mainframe Answer Line',
-  agentId: 'agent_DBLHdNt3ZyJnL864',
+  agentId: '',
   voice: 'nejdfbmfnm3s', // Kieran S
-  instructions:
-    'You are the Mainframe Answer Line. Greet callers warmly, qualify the enquiry, capture a callback number if needed, and keep answers concise.',
+  instructions: DEFAULT_ANSWER_LINE_INSTRUCTIONS,
   consoleUrl: 'https://console.x.ai/',
 };
