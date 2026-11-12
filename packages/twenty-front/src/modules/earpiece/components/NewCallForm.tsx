@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { EP_API } from "../lib/api";
+import { earpieceFetch } from "../lib/api";
 import type { CallMode, CallRow } from "../lib/types";
 
 const MODES: { value: CallMode; label: string; hint: string }[] = [
@@ -121,21 +121,25 @@ export function NewCallForm({ onCreated }: { onCreated: (call: CallRow) => void 
     setBusy(true);
     setError("");
 
-    const res = await fetch(`${EP_API}/calls`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, mode }),
-    });
+    try {
+      const res = await earpieceFetch("/calls", {
+        method: "POST",
+        body: JSON.stringify({ ...form, mode }),
+      });
 
-    if (!res.ok) {
+      if (!res.ok) {
+        setError("Couldn't save that. Try again.");
+        setBusy(false);
+        return;
+      }
+
+      const { call } = await res.json();
+      // The call page starts the research itself, so it survives this navigation.
+      onCreated(call as CallRow);
+    } catch {
       setError("Couldn't save that. Try again.");
       setBusy(false);
-      return;
     }
-
-    const { call } = await res.json();
-    // The call page starts the research itself, so it survives this navigation.
-    onCreated(call as CallRow);
   }
 
   return (

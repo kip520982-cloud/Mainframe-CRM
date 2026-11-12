@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { EP_API } from "../lib/api";
+import { earpieceFetch } from "../lib/api";
 import type { Brief, CallRow, Card, Fact, Line, Play, Wrapup } from "../lib/types";
 import {
   SourceRecorder,
@@ -72,7 +72,7 @@ export function CallConsole({
   /* ---------------------------------------------------------------- brief */
 
   const refreshCall = useCallback(async () => {
-    const res = await fetch(`${EP_API}/calls/${initialCall.id}`);
+    const res = await earpieceFetch(`/calls/${initialCall.id}`);
     if (!res.ok) {return null;}
     const data = await res.json();
     setCall(data.call);
@@ -82,9 +82,8 @@ export function CallConsole({
   const runResearch = useCallback(async () => {
     setCall((c) => ({ ...c, brief_status: "running", brief_error: null }));
     try {
-      const res = await fetch(`${EP_API}/research`, {
+      const res = await earpieceFetch("/research", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: initialCall.id }),
       });
       const data = await res.json();
@@ -153,7 +152,7 @@ export function CallConsole({
       fd.append("at", String(Math.round(at)));
       fd.append("mixed", recordersRef.current.length < 2 ? "1" : "0");
       try {
-        const res = await fetch(`${EP_API}/listen`, { method: "POST", body: fd });
+        const res = await earpieceFetch("/listen", { method: "POST", body: fd });
         const data = await res.json();
         if (data.line) {setLines((prev) => [...prev, data.line as Line]);}
         if (Array.isArray(data.cards) && data.cards.length) {
@@ -211,9 +210,8 @@ export function CallConsole({
     recordersRef.current = recorders;
 
     setPhase("live");
-    fetch(`${EP_API}/calls/${initialCall.id}`, {
+    earpieceFetch(`/calls/${initialCall.id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "live", started_at: new Date().toISOString() }),
     }).catch(() => {});
   }
@@ -227,9 +225,8 @@ export function CallConsole({
     await new Promise((r) => setTimeout(r, 2500));
 
     try {
-      const res = await fetch(`${EP_API}/wrapup`, {
+      const res = await earpieceFetch("/wrapup", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ callId: initialCall.id }),
       });
       const data = await res.json();
@@ -254,7 +251,7 @@ export function CallConsole({
   async function callAgain() {
     setRerunning(true);
     try {
-      const res = await fetch(`${EP_API}/calls/${initialCall.id}/rerun`, { method: "POST" });
+      const res = await earpieceFetch(`/calls/${initialCall.id}/rerun`, { method: "POST" });
       const data = await res.json();
       if (data.call?.id) {
         onOpenCall(data.call.id as string);

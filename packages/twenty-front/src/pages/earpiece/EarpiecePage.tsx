@@ -5,7 +5,7 @@ import { CallConsole } from '@/earpiece/components/CallConsole';
 import { Logo } from '@/earpiece/components/Logo';
 import { NewCallForm } from '@/earpiece/components/NewCallForm';
 import { ProfileForm } from '@/earpiece/components/ProfileForm';
-import { EP_API } from '@/earpiece/lib/api';
+import { earpieceFetch } from '@/earpiece/lib/api';
 import type {
   CallRow,
   Card,
@@ -49,7 +49,7 @@ export const EarpiecePage = () => {
   const [loadingConsole, setLoadingConsole] = useState(false);
 
   const loadCalls = useCallback(async () => {
-    const res = await fetch(`${EP_API}/calls`);
+    const res = await earpieceFetch('/calls');
     if (!res.ok) {return;}
     const data = await res.json();
     setCalls(data.calls ?? []);
@@ -59,7 +59,7 @@ export const EarpiecePage = () => {
     if (view.name !== 'home') {return;}
     void loadCalls();
     if (tab === 'profile' && profile === null) {
-      void fetch(`${EP_API}/profile`)
+      void earpieceFetch('/profile')
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data?.profile) {setProfile(data.profile);}
@@ -73,7 +73,7 @@ export const EarpiecePage = () => {
       setLoadingConsole(true);
       setView({ name: 'console', callId });
       try {
-        const res = await fetch(`${EP_API}/calls/${callId}`);
+        const res = await earpieceFetch(`/calls/${callId}`);
         if (!res.ok) {throw new Error('not found');}
         const data = await res.json();
         setConsoleData({
@@ -93,7 +93,7 @@ export const EarpiecePage = () => {
 
   const deleteCall = useCallback(
     async (callId: string) => {
-      await fetch(`${EP_API}/calls/${callId}`, { method: 'DELETE' });
+      await earpieceFetch(`/calls/${callId}`, { method: 'DELETE' });
       void loadCalls();
     },
     [loadCalls],

@@ -5,6 +5,7 @@ import {
   GROK_ANSWER_LINE_VOICE_INSTRUCTIONS,
   GROK_ASSISTANT_VOICE_GREETING,
   GROK_ASSISTANT_VOICE_INSTRUCTIONS,
+  GROK_VOICE_AGENT_ID,
 } from 'src/engine/metadata-modules/ai/ai-voice/constants/grok-voice-instructions';
 import { type GrokSessionInput } from 'src/engine/metadata-modules/ai/ai-voice/dtos/grok-session.input';
 
@@ -44,9 +45,10 @@ export class GrokRealtimeSessionService {
       process.env.GROK_VOICE ||
       'nejdfbmfnm3s';
 
-    // Only use a console agent when the client explicitly sends an id.
-    // Env agent ids used to wipe instructions and leave a greeting-only agent.
-    const agentId = input.agentId?.trim() || null;
+    const agentId =
+      input.agentId?.trim() ||
+      process.env.GROK_AGENT_ID?.trim() ||
+      GROK_VOICE_AGENT_ID;
     const instructions = agentId
       ? null
       : input.instructions?.trim() ||

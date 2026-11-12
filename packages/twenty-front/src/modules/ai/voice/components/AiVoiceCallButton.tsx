@@ -1,4 +1,5 @@
 import { startVoiceCall, stopVoiceCall } from '@/ai/voice/call/voiceCallRoom';
+import { GROK_VOICE_AGENT_ID } from '@/ai/voice/constants/grokVoiceAgent';
 import { voiceCallStatusState } from '@/ai/voice/call/voiceCallState';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 import { useLingui } from '@lingui/react/macro';
@@ -14,7 +15,7 @@ export const AiVoiceCallButton = () => {
   }
 
   const handleStartCall = () => {
-    void startVoiceCall().catch(() => {
+    void startVoiceCall({ agentId: GROK_VOICE_AGENT_ID }).catch(() => {
       stopVoiceCall();
     });
   };

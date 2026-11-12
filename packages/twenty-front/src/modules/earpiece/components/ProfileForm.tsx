@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { EP_API } from "../lib/api";
+import { earpieceFetch } from "../lib/api";
 import type { Profile } from "../lib/types";
 
 const FIELDS = [
@@ -75,9 +75,8 @@ export function ProfileForm({ initial }: { initial: Profile }) {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setState("saving");
-    const res = await fetch(`${EP_API}/profile`, {
+    const res = await earpieceFetch("/profile", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
     setState(res.ok ? "saved" : "error");

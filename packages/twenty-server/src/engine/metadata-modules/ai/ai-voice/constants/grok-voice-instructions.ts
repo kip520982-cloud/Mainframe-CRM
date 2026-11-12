@@ -1,3 +1,5 @@
+export const GROK_VOICE_AGENT_ID = 'agent_2LAbihSSvo3acCu5';
+
 export const GROK_ASSISTANT_VOICE_GREETING =
   "Hey, it's Mainframe. What can I help with?";
 

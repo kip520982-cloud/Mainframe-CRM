@@ -226,76 +226,28 @@ export const startVoiceCall = async (
     ]);
     socket = nextSocket;
 
-    let sessionReady = Boolean(session.agentId);
-    let openingLineSent = Boolean(session.agentId);
-    let sessionUpdateSent = Boolean(session.agentId);
-
     const sendJson = (payload: Record<string, unknown>) => {
       if (nextSocket.readyState === WebSocket.OPEN) {
         nextSocket.send(JSON.stringify(payload));
       }
     };
 
-    const configureSession = () => {
-      if (session.agentId || sessionUpdateSent) {
-        return;
-      }
-      sessionUpdateSent = true;
+    // Same kickoff as xAI's realtime examples: user Hello, then response.create.
+    const kickOffTurn = () => {
       sendJson({
-        type: 'session.update',
-        session: {
-          voice: session.voice || 'nejdfbmfnm3s',
-          instructions:
-            session.instructions ||
-            'You are the Mainframe CRM voice assistant. Keep replies short, clear, and conversational.',
-          reasoning: { effort: 'none' },
-          turn_detection: {
-            type: 'server_vad',
-            idle_timeout_ms: 4000,
-          },
-          audio: {
-            input: { format: { type: 'audio/pcm', rate: SAMPLE_RATE } },
-            output: { format: { type: 'audio/pcm', rate: SAMPLE_RATE } },
-          },
+        type: 'conversation.item.create',
+        item: {
+          type: 'message',
+          role: 'user',
+          content: [{ type: 'input_text', text: 'Hello!' }],
         },
       });
-    };
-
-    const speakOpeningLine = () => {
-      if (session.agentId || openingLineSent) {
-        return;
-      }
-      openingLineSent = true;
-      const greeting = session.greeting?.trim();
-      if (greeting) {
-        // Scripted greeting (xAI force_message). Do not also send response.create.
-        sendJson({
-          type: 'conversation.item.create',
-          item: {
-            type: 'force_message',
-            role: 'assistant',
-            interruptible: false,
-            content: [{ type: 'output_text', text: greeting }],
-          },
-        });
-        return;
-      }
       sendJson({ type: 'response.create' });
     };
 
     nextSocket.addEventListener('open', async () => {
       try {
-        if (!session.agentId) {
-          window.setTimeout(() => {
-            configureSession();
-          }, 1000);
-          window.setTimeout(() => {
-            if (!openingLineSent) {
-              sessionReady = true;
-              speakOpeningLine();
-            }
-          }, 2500);
-        }
+        kickOffTurn();
 
         audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
         await audioContext.resume();
@@ -353,12 +305,7 @@ export const startVoiceCall = async (
         return;
       }
       const type = payload.type;
-      if (type === 'session.created') {
-        configureSession();
-      } else if (type === 'session.updated') {
-        sessionReady = true;
-        speakOpeningLine();
-      } else if (
+      if (
         type === 'response.output_audio.delta' &&
         typeof payload.delta === 'string'
       ) {
@@ -372,15 +319,8 @@ export const startVoiceCall = async (
         playbackTime = audioContext?.currentTime ?? 0;
         listener?.onAgentSpeakingChange(false);
       } else if (type === 'error') {
-        if (!sessionReady) {
-          listener?.onErrorChange('call_failed');
-          cleanupCall();
-          return;
-        }
-        if (!openingLineSent) {
-          sendJson({ type: 'response.create' });
-          openingLineSent = true;
-        }
+        listener?.onErrorChange('call_failed');
+        cleanupCall();
       }
     });
 
