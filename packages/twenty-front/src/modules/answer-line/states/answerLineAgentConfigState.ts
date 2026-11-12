@@ -10,13 +10,14 @@ const isValidConfig = (value: AnswerLineAgentConfig): boolean =>
   typeof value.name === 'string' &&
   typeof value.agentId === 'string' &&
   typeof value.voice === 'string' &&
+  typeof value.greeting === 'string' &&
   typeof value.instructions === 'string' &&
   typeof value.consoleUrl === 'string';
 
 export const answerLineAgentConfigState =
   createAtomState<AnswerLineAgentConfig>({
-    // key bump clears stale greeting-only configs from earlier localStorage
-    key: 'answer-line/answerLineAgentConfigState.v2',
+    // key bump clears stale greeting-only / unstructured prompts from earlier localStorage
+    key: 'answer-line/answerLineAgentConfigState.v3',
     defaultValue: DEFAULT_ANSWER_LINE_AGENT_CONFIG,
     useLocalStorage: true,
     localStorageOptions: { getOnInit: true },

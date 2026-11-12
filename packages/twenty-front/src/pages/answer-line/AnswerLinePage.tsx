@@ -151,6 +151,7 @@ export const AnswerLinePage = () => {
       channel: 'answer-line',
       agentId: config.agentId.trim() || undefined,
       voice: config.voice.trim() || undefined,
+      greeting: config.greeting,
       instructions: config.instructions,
     }).catch(() => {
       stopVoiceCall();
@@ -200,6 +201,13 @@ export const AnswerLinePage = () => {
           />
         </StyledLabel>
         <StyledLabel>
+          {doNotTranslate('Opening line (spoken first, then the job below takes over)')}
+          <StyledInput
+            value={config.greeting}
+            onChange={(event) => updateField('greeting', event.target.value)}
+          />
+        </StyledLabel>
+        <StyledLabel>
           {doNotTranslate('Personality, job & call flow')}
           <StyledTextarea
             value={config.instructions}
@@ -242,7 +250,7 @@ export const AnswerLinePage = () => {
         <StyledCardTitle>{doNotTranslate('How this fits')}</StyledCardTitle>
         <StyledHint>
           {doNotTranslate(
-            'Chat assistant phone button and Answer Line both use Grok speech-to-speech. Deep training (docs, tools, guardrails) stays in xAI Voice Agent Builder; Mainframe stores the agent link and lets you test calls here.',
+            'Chat assistant phone button and Answer Line both use Grok speech-to-speech. Personality, job, greeting, and call flow live in Mainframe and are applied on each test call. Leave agent ID blank unless you want an xAI console agent to take over.',
           )}
         </StyledHint>
         <StyledHint>

@@ -1,7 +1,9 @@
 import { Injectable, Logger, ServiceUnavailableException } from '@nestjs/common';
 
 import {
+  GROK_ANSWER_LINE_VOICE_GREETING,
   GROK_ANSWER_LINE_VOICE_INSTRUCTIONS,
+  GROK_ASSISTANT_VOICE_GREETING,
   GROK_ASSISTANT_VOICE_INSTRUCTIONS,
 } from 'src/engine/metadata-modules/ai/ai-voice/constants/grok-voice-instructions';
 import { type GrokSessionInput } from 'src/engine/metadata-modules/ai/ai-voice/dtos/grok-session.input';
@@ -19,6 +21,7 @@ export type GrokRealtimeSession = {
   voice: string;
   agentId: string | null;
   instructions: string | null;
+  greeting: string | null;
   channel: 'assistant' | 'answer-line';
 };
 
@@ -50,6 +53,12 @@ export class GrokRealtimeSessionService {
         (channel === 'answer-line'
           ? GROK_ANSWER_LINE_VOICE_INSTRUCTIONS
           : GROK_ASSISTANT_VOICE_INSTRUCTIONS);
+    const greeting = agentId
+      ? null
+      : input.greeting?.trim() ||
+        (channel === 'answer-line'
+          ? GROK_ANSWER_LINE_VOICE_GREETING
+          : GROK_ASSISTANT_VOICE_GREETING);
 
     const response = await fetch('https://api.x.ai/v1/realtime/client_secrets', {
       method: 'POST',
@@ -75,6 +84,7 @@ export class GrokRealtimeSessionService {
       voice,
       agentId,
       instructions,
+      greeting,
       channel,
     };
   }

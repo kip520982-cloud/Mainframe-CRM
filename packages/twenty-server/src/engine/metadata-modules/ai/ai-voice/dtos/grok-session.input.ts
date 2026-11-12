@@ -19,4 +19,9 @@ export class GrokSessionInput {
   @IsString()
   @MaxLength(8000)
   instructions?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  greeting?: string;
 }
