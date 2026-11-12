@@ -1,15 +1,11 @@
 import { REST_API_BASE_URL } from '@/apollo/constants/RestApiBaseUrl';
 import { SESSION_COOKIE_OPT_IN_HEADER_NAME } from 'twenty-shared/constants';
-import {
-  RemoteParticipant,
-  Room,
-  RoomEvent,
-  type RemoteTrack,
-} from 'livekit-client';
 
 import { type VoiceCallStatus } from '@/ai/voice/call/voiceCallState';
 
-// machine codes — the panel turns these into human text (it owns the translator)
+const SAMPLE_RATE = 24_000;
+const CHUNK_BYTES = (SAMPLE_RATE * 2) / 10;
+
 const micErrorCode = (error: unknown): string => {
   if (error instanceof DOMException) {
     if (error.name === 'NotAllowedError') {
@@ -29,9 +25,22 @@ export type VoiceCallListener = {
   onErrorChange: (error: string | null) => void;
 };
 
-let room: Room | null = null;
-let agentAudioElement: HTMLMediaElement | null = null;
+type GrokSessionPayload = {
+  value: string;
+  model: string;
+  voice: string;
+  agentId: string | null;
+};
+
 let listener: VoiceCallListener | null = null;
+let socket: WebSocket | null = null;
+let audioContext: AudioContext | null = null;
+let mediaStream: MediaStream | null = null;
+let processor: ScriptProcessorNode | null = null;
+let sourceNode: MediaStreamAudioSourceNode | null = null;
+let playbackTime = 0;
+let pendingPcm = new Uint8Array(0);
+let isMuted = false;
 
 export const registerVoiceCallListener = (
   nextListener: VoiceCallListener,
@@ -42,25 +51,121 @@ export const registerVoiceCallListener = (
   };
 };
 
-const detachAgentAudio = () => {
-  agentAudioElement?.remove();
-  agentAudioElement = null;
+const floatTo16BitPcm = (float32: Float32Array): Uint8Array => {
+  const out = new Int16Array(float32.length);
+  for (let index = 0; index < float32.length; index += 1) {
+    const sample = Math.max(-1, Math.min(1, float32[index]));
+    out[index] = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+  }
+  return new Uint8Array(out.buffer);
+};
+
+const downsampleTo24k = (float32: Float32Array, inputRate: number): Uint8Array => {
+  if (inputRate === SAMPLE_RATE) {
+    return floatTo16BitPcm(float32);
+  }
+  const ratio = inputRate / SAMPLE_RATE;
+  const newLength = Math.floor(float32.length / ratio);
+  const result = new Float32Array(newLength);
+  for (let index = 0; index < newLength; index += 1) {
+    result[index] = float32[Math.floor(index * ratio)] ?? 0;
+  }
+  return floatTo16BitPcm(result);
+};
+
+const concatBytes = (first: Uint8Array, second: Uint8Array): Uint8Array => {
+  const out = new Uint8Array(first.length + second.length);
+  out.set(first, 0);
+  out.set(second, first.length);
+  return out;
+};
+
+const bytesToBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    const slice = bytes.subarray(index, index + chunkSize);
+    binary += String.fromCharCode(...slice);
+  }
+  return btoa(binary);
+};
+
+const playPcm16 = (pcmBytes: Uint8Array) => {
+  if (!audioContext) {
+    return;
+  }
+  const sampleCount = pcmBytes.length / 2;
+  const buffer = audioContext.createBuffer(1, sampleCount, SAMPLE_RATE);
+  const channel = buffer.getChannelData(0);
+  const view = new DataView(
+    pcmBytes.buffer,
+    pcmBytes.byteOffset,
+    pcmBytes.byteLength,
+  );
+  for (let index = 0; index < sampleCount; index += 1) {
+    channel[index] = view.getInt16(index * 2, true) / 0x8000;
+  }
+  const node = audioContext.createBufferSource();
+  node.buffer = buffer;
+  node.connect(audioContext.destination);
+  const startAt = Math.max(audioContext.currentTime, playbackTime);
+  node.start(startAt);
+  playbackTime = startAt + buffer.duration;
+  listener?.onAgentSpeakingChange(true);
+  window.setTimeout(
+    () => {
+      if (audioContext && audioContext.currentTime >= playbackTime - 0.05) {
+        listener?.onAgentSpeakingChange(false);
+      }
+    },
+    Math.max(50, buffer.duration * 1000),
+  );
+};
+
+const cleanupCall = () => {
+  try {
+    processor?.disconnect();
+  } catch {
+    // already torn down
+  }
+  try {
+    sourceNode?.disconnect();
+  } catch {
+    // already torn down
+  }
+  mediaStream?.getTracks().forEach((track) => track.stop());
+  try {
+    socket?.close();
+  } catch {
+    // already closed
+  }
+  void audioContext?.close();
+  processor = null;
+  sourceNode = null;
+  mediaStream = null;
+  socket = null;
+  audioContext = null;
+  pendingPcm = new Uint8Array(0);
+  playbackTime = 0;
+  isMuted = false;
+  listener?.onAgentSpeakingChange(false);
+  listener?.onStatusChange('idle');
+};
+
+export const stopVoiceCall = () => {
+  cleanupCall();
 };
 
 export const startVoiceCall = async (): Promise<void> => {
-  if (room !== null) {
+  if (socket !== null) {
     return;
   }
 
   listener?.onStatusChange('connecting');
   listener?.onErrorChange(null);
 
-  // mic before connecting: a blocked mic fails here with a clear reason
-  // instead of joining the call and dropping with no clue
   try {
-    const micStream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-    });
+    const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     micStream.getTracks().forEach((track) => track.stop());
   } catch (error) {
     listener?.onErrorChange(micErrorCode(error));
@@ -68,7 +173,7 @@ export const startVoiceCall = async (): Promise<void> => {
     throw error;
   }
 
-  const response = await fetch(`${REST_API_BASE_URL}/voice/livekit-token`, {
+  const response = await fetch(`${REST_API_BASE_URL}/voice/grok-session`, {
     method: 'POST',
     credentials: 'include',
     headers: {
@@ -79,69 +184,123 @@ export const startVoiceCall = async (): Promise<void> => {
   if (!response.ok) {
     listener?.onErrorChange('call_failed');
     listener?.onStatusChange('idle');
-    throw new Error(`LiveKit token request failed: ${response.status}`);
+    throw new Error(`Grok session request failed: ${response.status}`);
   }
 
-  const { url, token } = await response.json();
+  const session = (await response.json()) as GrokSessionPayload;
+  const wsUrl = session.agentId
+    ? `wss://api.x.ai/v1/realtime?agent_id=${encodeURIComponent(session.agentId)}`
+    : `wss://api.x.ai/v1/realtime?model=${encodeURIComponent(session.model)}`;
 
-  const nextRoom = new Room();
+  await new Promise<void>((resolve, reject) => {
+    const nextSocket = new WebSocket(wsUrl, [
+      `xai-client-secret.${session.value}`,
+    ]);
+    socket = nextSocket;
 
-  nextRoom.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
-    if (track.kind !== 'audio') {
-      return;
-    }
-    detachAgentAudio();
-    agentAudioElement = track.attach();
+    nextSocket.addEventListener('open', async () => {
+      try {
+        if (!session.agentId) {
+          nextSocket.send(
+            JSON.stringify({
+              type: 'session.update',
+              session: {
+                voice: session.voice || 'eve',
+                instructions:
+                  'You are the Mainframe CRM voice assistant. Keep replies short, clear, and conversational.',
+                turn_detection: { type: 'server_vad' },
+                audio: {
+                  input: { format: { type: 'audio/pcm', rate: SAMPLE_RATE } },
+                  output: { format: { type: 'audio/pcm', rate: SAMPLE_RATE } },
+                },
+              },
+            }),
+          );
+        }
+
+        audioContext = new AudioContext({ sampleRate: SAMPLE_RATE });
+        await audioContext.resume();
+        mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            channelCount: 1,
+          },
+        });
+        sourceNode = audioContext.createMediaStreamSource(mediaStream);
+        processor = audioContext.createScriptProcessor(4096, 1, 1);
+        processor.onaudioprocess = (event) => {
+          if (!socket || socket.readyState !== WebSocket.OPEN || isMuted) {
+            return;
+          }
+          const input = event.inputBuffer.getChannelData(0);
+          const pcm = downsampleTo24k(input, audioContext?.sampleRate ?? SAMPLE_RATE);
+          pendingPcm = concatBytes(pendingPcm, pcm);
+          while (pendingPcm.length >= CHUNK_BYTES) {
+            const chunk = pendingPcm.slice(0, CHUNK_BYTES);
+            pendingPcm = pendingPcm.slice(CHUNK_BYTES);
+            socket.send(
+              JSON.stringify({
+                type: 'input_audio_buffer.append',
+                audio: bytesToBase64(chunk),
+              }),
+            );
+          }
+        };
+        sourceNode.connect(processor);
+        processor.connect(audioContext.destination);
+        listener?.onStatusChange('active');
+        resolve();
+      } catch (error) {
+        cleanupCall();
+        listener?.onErrorChange(
+          error instanceof DOMException && error.name === 'NotAllowedError'
+            ? 'mic_blocked'
+            : 'call_failed',
+        );
+        reject(error);
+      }
+    });
+
+    nextSocket.addEventListener('message', (event) => {
+      let payload: Record<string, unknown>;
+      try {
+        payload = JSON.parse(String(event.data)) as Record<string, unknown>;
+      } catch {
+        return;
+      }
+      const type = payload.type;
+      if (type === 'response.output_audio.delta' && typeof payload.delta === 'string') {
+        const raw = atob(payload.delta);
+        const bytes = new Uint8Array(raw.length);
+        for (let index = 0; index < raw.length; index += 1) {
+          bytes[index] = raw.charCodeAt(index);
+        }
+        playPcm16(bytes.slice(0, bytes.length - (bytes.length % 2)));
+      } else if (type === 'input_audio_buffer.speech_started') {
+        playbackTime = audioContext?.currentTime ?? 0;
+        listener?.onAgentSpeakingChange(false);
+      } else if (type === 'error') {
+        listener?.onErrorChange('call_failed');
+        cleanupCall();
+      }
+    });
+
+    nextSocket.addEventListener('close', () => {
+      cleanupCall();
+    });
+
+    nextSocket.addEventListener('error', () => {
+      listener?.onErrorChange('call_failed');
+      cleanupCall();
+      reject(new Error('Grok WebSocket failed'));
+    });
   });
-
-  nextRoom.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
-    if (track.kind !== 'audio') {
-      return;
-    }
-    track.detach();
-    detachAgentAudio();
-  });
-
-  nextRoom.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
-    listener?.onAgentSpeakingChange(
-      speakers.some((speaker) => speaker instanceof RemoteParticipant),
-    );
-  });
-
-  nextRoom.on(RoomEvent.Disconnected, () => {
-    detachAgentAudio();
-    room = null;
-    listener?.onAgentSpeakingChange(false);
-    listener?.onStatusChange('idle');
-  });
-
-  try {
-    await nextRoom.connect(url, token);
-    await nextRoom.localParticipant.setMicrophoneEnabled(true);
-  } catch (error) {
-    nextRoom.disconnect();
-    detachAgentAudio();
-    listener?.onErrorChange(
-      error instanceof DOMException && error.name === 'NotAllowedError'
-        ? 'mic_blocked'
-        : 'call_failed',
-    );
-    listener?.onStatusChange('idle');
-    throw error;
-  }
-
-  room = nextRoom;
-  listener?.onStatusChange('active');
-};
-
-export const stopVoiceCall = () => {
-  room?.disconnect();
-  detachAgentAudio();
-  room = null;
-  listener?.onAgentSpeakingChange(false);
-  listener?.onStatusChange('idle');
 };
 
 export const setVoiceCallMuted = async (muted: boolean): Promise<void> => {
-  await room?.localParticipant.setMicrophoneEnabled(!muted);
+  isMuted = muted;
+  mediaStream?.getAudioTracks().forEach((track) => {
+    track.enabled = !muted;
+  });
 };

@@ -12,8 +12,6 @@ import {
   UseFilters,
   UseGuards,
 } from '@nestjs/common';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
 import { type Response } from 'express';
 import { PermissionFlagType } from 'twenty-shared/constants';
 import { ApiPath } from 'twenty-shared/types';
@@ -25,6 +23,7 @@ import { AuthWorkspace } from 'src/engine/decorators/auth/auth-workspace.decorat
 import { AccessPolicyGuard } from 'src/engine/guards/access-policy.guard';
 import { JwtAuthGuard } from 'src/engine/guards/jwt-auth.guard';
 import { SpeakInput } from 'src/engine/metadata-modules/ai/ai-voice/dtos/speak.input';
+import { GrokRealtimeSessionService } from 'src/engine/metadata-modules/ai/ai-voice/services/grok-realtime-session.service';
 import {
   VoiceTtsService,
   type VoiceOption,
@@ -51,41 +50,12 @@ import { PermissionsRestApiExceptionFilter } from 'src/engine/permissions/utils/
 )
 @UseFilters(PermissionsRestApiExceptionFilter, AuthRestApiExceptionFilter)
 export class AiVoiceController {
-  constructor(private readonly voiceTtsService: VoiceTtsService) {}
+  constructor(
+    private readonly voiceTtsService: VoiceTtsService,
+    private readonly grokRealtimeSessionService: GrokRealtimeSessionService,
+  ) {}
 
   private readonly logger = new Logger(AiVoiceController.name);
-  private readonly execFileAsync = promisify(execFile);
-  private readonly lkBinary = process.env.LIVEKIT_CLI_PATH ?? 'lk';
-
-  // rooms are joined implicitly by the browser, so the agent is only pulled in
-  // through an explicit dispatch — without this the call connects to an empty room
-  private async dispatchVoiceAgent(roomName: string): Promise<void> {
-    const existing = await this.execFileAsync(
-      this.lkBinary,
-      ['dispatch', 'list', roomName, '--url', process.env.LIVEKIT_URL ?? ''],
-      { timeout: 10_000 },
-    ).catch(() => ({ stdout: '' }));
-
-    if (existing.stdout.includes('mainframe-voice')) {
-      return;
-    }
-
-    await this.execFileAsync(
-      this.lkBinary,
-      [
-        'dispatch',
-        'create',
-        '--url',
-        process.env.LIVEKIT_URL ?? '',
-        '--agent-name',
-        'mainframe-voice',
-        '--room',
-        roomName,
-      ],
-      { timeout: 10_000 },
-    );
-    this.logger.log(`Voice agent dispatched to room=${roomName}`);
-  }
 
   @Get('voices')
   @HttpCode(200)
@@ -93,11 +63,21 @@ export class AiVoiceController {
     return { voices: this.voiceTtsService.getVoiceOptions() };
   }
 
+  // Browser-side Grok speech-to-speech: mint an ephemeral xAI client secret.
+  // The CRM call UI connects straight to wss://api.x.ai/v1/realtime — no LiveKit
+  // STT→LLM→TTS cascade and no lk CLI on the server image.
+  @Post('grok-session')
+  @HttpCode(200)
+  async getGrokSession() {
+    return this.grokRealtimeSessionService.createBrowserSession();
+  }
+
   @Post('livekit-token')
   @HttpCode(200)
   async getLiveKitToken(
     @AuthUserWorkspaceId() userWorkspaceId: string,
   ): Promise<{ url: string; token: string; roomName: string }> {
+    // Kept for telephony / SIP rooms; chat voice call uses /voice/grok-session.
     const url = process.env.LIVEKIT_URL;
     const apiKey = process.env.LIVEKIT_API_KEY;
     const apiSecret = process.env.LIVEKIT_API_SECRET;
@@ -107,8 +87,9 @@ export class AiVoiceController {
     }
 
     const roomName = `mainframe-voice-${userWorkspaceId}`;
-
-    await this.dispatchVoiceAgent(roomName);
+    this.logger.warn(
+      `livekit-token requested for ${roomName}; chat voice should use grok-session`,
+    );
 
     const token = jwt.sign(
       {
