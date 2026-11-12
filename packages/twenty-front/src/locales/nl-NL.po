@@ -212,6 +212,12 @@ msgstr "{0, plural, one {{days} dag} other {{days} dagen}}"
 msgid "{0, plural, one {{years} year} other {{years} years}}"
 msgstr "{0, plural, one {{years} jaar} other {{years} jaar}}"
 
+#. js-lingui-id: 4RHkBp
+#. placeholder {0}: parts.length
+#: src/modules/ai/components/AiActionsFeed.tsx
+msgid "{0, plural, one {# action completed} other {# actions completed}}"
+msgstr ""
+
 #. js-lingui-id: rsUtpS
 #. placeholder {0}: selectedThreads.length
 #: src/modules/ai/components/AiChatInboxSelectionPane.tsx
@@ -746,6 +752,11 @@ msgstr "{emoji} door {reactorNames}"
 #: src/pages/settings/admin-panel/SettingsAdminWorkspacesStatus.tsx
 msgid "{failedCount, plural, one {# workspace failed} other {# workspaces failed}}"
 msgstr "{failedCount, plural, one {# werkruimte is mislukt} other {# werkruimtes zijn mislukt}}"
+
+#. js-lingui-id: yDb0ZW
+#: src/modules/ai/components/AiActionsFeed.tsx
+msgid "{failedCount} failed"
+msgstr ""
 
 #. js-lingui-id: bPZh8X
 #: src/modules/activities/timeline-activities/rows/main-object/components/EventRowMainObjectUpdated.tsx
@@ -2347,6 +2358,11 @@ msgstr "Menu-item erna toevoegen"
 msgid "Add menu item before"
 msgstr "Menu-item ervoor toevoegen"
 
+#. js-lingui-id: 4cPy3V
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "Add milestone"
+msgstr ""
+
 #. js-lingui-id: q5ruxx
 #: src/pages/settings/admin-panel/SettingsAdminAiProviderDetail.tsx
 msgid "Add Model"
@@ -3302,6 +3318,11 @@ msgstr "Alle berichten"
 #: src/modules/settings/developers/components/WebhookEntitySelect.tsx
 msgid "All Metadata"
 msgstr "Alle Metadata"
+
+#. js-lingui-id: E1Inta
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "All milestones passed"
+msgstr ""
 
 #. js-lingui-id: vKmC3w
 #: src/modules/workflow/workflow-steps/workflow-actions/ai-agent-action/components/WorkflowAiAgentPermissionList.tsx
@@ -4385,6 +4406,11 @@ msgstr "Assistent"
 msgid "Assistant avatar"
 msgstr "Avatar van assistent"
 
+#. js-lingui-id: 9qaarq
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "Assistant is speaking…"
+msgstr ""
+
 #. js-lingui-id: iHgLrg
 #: src/pages/settings/ai/components/SettingsAiAssistantCustomizeMenu.tsx
 msgid "Assistant name"
@@ -5421,6 +5447,17 @@ msgstr "Kalender-widget"
 msgid "Calendars"
 msgstr "Kalenders"
 
+#. js-lingui-id: 8hvxGX
+#: src/modules/telephony/components/TelephonyDialer.tsx
+msgid "Call"
+msgstr ""
+
+#. js-lingui-id: njdoIS
+#. placeholder {0}: error instanceof Error ? error.message : 'Unknown error'
+#: src/modules/telephony/components/TelephonyDialer.tsx
+msgid "Call failed: {0}"
+msgstr ""
+
 #. js-lingui-id: cHma9m
 #: src/modules/activities/calendar/components/CalendarEventCallRecorderAvatar.tsx
 msgid "Call recorder"
@@ -6267,6 +6304,11 @@ msgstr "Kies welke websites die zijn ingesloten in iframe-widgets toegang tot de
 msgid "Choose your preferences for the apps installed on your workspace by the admin"
 msgstr "Kies je voorkeuren voor de apps die door de beheerder in je werkruimte zijn geïnstalleerd"
 
+#. js-lingui-id: 3iuN66
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "Chrome is blocking your microphone. Click the tune icon at the left of the address bar, set Microphone to Allow — and check Mac System Settings, Privacy & Security, Microphone, Chrome is switched on. Then press the call button again."
+msgstr ""
+
 #. js-lingui-id: 7xMmki
 #: src/pages/settings/ai/constants/SettingsAiAssistantShapeLabels.ts
 msgid "Circle"
@@ -6500,6 +6542,7 @@ msgstr ""
 #: src/modules/related-record-paths/components/SettingsObjectRelatedRecordPathPicker.tsx
 #: src/modules/settings/applications/components/SettingsApplicationScreenshotLightbox.tsx
 #: src/modules/settings/roles/role-permissions/object-level-permissions/record-level-permissions/components/SettingsRolePermissionsObjectLevelRecordLevelPermissionMeValueSelect.tsx
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
 #: src/modules/ui/feedback/toast/components/__tests__/AppToaster.test.tsx
 #: src/modules/ui/feedback/toast/utils/getLocalizedToastProps.ts
 #: src/modules/workflow/workflow-steps/components/WorkflowDropdownStepOutputItems.tsx
@@ -6521,6 +6564,11 @@ msgstr "Banner sluiten"
 #: src/modules/log-console/components/LogConsoleDetailPanel.tsx
 msgid "Close details"
 msgstr "Details sluiten"
+
+#. js-lingui-id: ikIxOT
+#: src/modules/telephony/components/TelephonyDialer.tsx
+msgid "Close dial pad"
+msgstr ""
 
 #. js-lingui-id: c2EYjZ
 #: src/modules/spreadsheet-import/components/SpreadSheetImportModalCloseButton.tsx
@@ -6842,6 +6890,11 @@ msgstr "Compacte weergave"
 msgid "Companies"
 msgstr "Bedrijven"
 
+#. js-lingui-id: ZpGoxV
+#: src/pages/onboarding/CreateProfile.tsx
+msgid "Company logo (optional)"
+msgstr ""
+
 #. js-lingui-id: awM9hH
 #: src/modules/settings/billing/components/internal/SettingsBillingPlanComparisonTable.tsx
 #: src/modules/settings/billing/components/internal/SettingsBillingSubscriptionInfoCardHeaderActions.tsx
@@ -6857,6 +6910,11 @@ msgstr "Vergoeding"
 #: src/modules/settings/unsubscribers/utils/getMessageSuppressionReasonBadge.ts
 msgid "Complaint"
 msgstr "Klacht"
+
+#. js-lingui-id: 4uFhtd
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "COMPLETE"
+msgstr ""
 
 #. js-lingui-id: 3WrMP5
 #: src/modules/settings/accounts/components/SettingsAccountsRowDropdownMenu.tsx
@@ -7271,6 +7329,11 @@ msgstr "Verbonden"
 #: src/modules/settings/accounts/components/SettingsAccountsLegacySections.tsx
 msgid "Connected accounts"
 msgstr "Verbonden accounts"
+
+#. js-lingui-id: JrFTcr
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "Connecting…"
+msgstr ""
 
 #. js-lingui-id: exyUec
 #: src/modules/settings/app-preferences/components/SettingsAppPreferencesConnectionsTable.tsx
@@ -7804,6 +7867,11 @@ msgstr "Stripe kon niet worden geopend. Neem contact op met support."
 #: src/modules/settings/developers/hooks/useOpenPlayground.ts
 msgid "Could not open the API playground"
 msgstr "Kon de API-playground niet openen"
+
+#. js-lingui-id: 5Xa0g9
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "Could not reach the call server. Try again in a minute."
+msgstr ""
 
 #. js-lingui-id: /jKY+z
 #: src/modules/ai/utils/tool-display/getToolDisplayMessage.ts
@@ -9135,6 +9203,11 @@ msgstr "Datum Granulariteit X"
 msgid "Date Granularity Y"
 msgstr "Datum Granulariteit Y"
 
+#. js-lingui-id: MnZA9L
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "Dates approximate · saved in this browser"
+msgstr ""
+
 #. js-lingui-id: H7OUPr
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownCalendarViewContent.tsx
 #: src/modules/object-record/object-options-dropdown/components/ObjectOptionsDropdownCustomView.tsx
@@ -9148,6 +9221,11 @@ msgstr "Datum Granulariteit Y"
 msgid "Day"
 msgstr "Dag"
 
+#. js-lingui-id: QXFp4x
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "DAY {clampedDay}"
+msgstr ""
+
 #. js-lingui-id: 5w8B/7
 #: src/modules/side-panel/pages/snooze-ai-chat/components/SidePanelSnoozeAiChatPage.tsx
 msgid "Day & Time"
@@ -9157,6 +9235,11 @@ msgstr "Dag en tijd"
 #: src/modules/side-panel/pages/page-layout/utils/getDateGranularityLabel.ts
 msgid "Day of the week"
 msgstr "Dag van de week"
+
+#. js-lingui-id: skN5wU
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "Day offset"
+msgstr ""
 
 #. js-lingui-id: J/Upwb
 #: src/modules/side-panel/pages/page-layout/utils/getDateGranularityPluralLabel.ts
@@ -10063,6 +10146,7 @@ msgstr "Vindbaarheid op {defaultDomain}"
 
 #. js-lingui-id: 1QfxQT
 #: src/modules/ai/components/AiChatUserCreditsExhaustedBanner.tsx
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
 msgid "Dismiss"
 msgstr "Sluiten"
 
@@ -10399,6 +10483,11 @@ msgstr "Zet neer om je import te starten"
 #: src/modules/getting-started/components/GettingStartedImportAction.tsx
 msgid "Drop your CSV or Excel from any tool"
 msgstr "Zet je CSV of Excel vanuit elke tool neer"
+
+#. js-lingui-id: a3GVfJ
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "DUE NOW"
+msgstr ""
 
 #. js-lingui-id: euc6Ns
 #: src/modules/advanced-text-editor/components/AdvancedTextEditorBlockHandleMenu.tsx
@@ -10752,6 +10841,11 @@ msgstr "Tabbladpictogram bewerken"
 #: src/modules/advanced-text-editor/constants/AdvancedTextEditorBlockCatalog.ts
 msgid "Edit this HTML in the block settings panel."
 msgstr "Bewerk deze HTML in het instellingenpaneel van het blok."
+
+#. js-lingui-id: L71gvH
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "Edit tracker"
+msgstr ""
 
 #. js-lingui-id: /VLYQj
 #: src/modules/settings/translations/components/SettingsTranslationsCard.tsx
@@ -11215,6 +11309,11 @@ msgstr "Proefperiode beëindigen"
 #: src/modules/information-banner/components/billing/InformationBannerEndTrialPeriod.tsx
 msgid "End trial period to continue using Workflow or AI features."
 msgstr "Beëindig de proefperiode om Workflow- of AI-functies te blijven gebruiken."
+
+#. js-lingui-id: hzs2uB
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "End voice call"
+msgstr ""
 
 #. js-lingui-id: O2tNG0
 #: src/modules/settings/billing/components/SettingsBillingSubscriptionInfo.tsx
@@ -14347,6 +14446,11 @@ msgstr "Kop 6"
 msgid "Handle"
 msgstr "Handle"
 
+#. js-lingui-id: WC0jnW
+#: src/modules/telephony/components/TelephonyDialer.tsx
+msgid "Hang up"
+msgstr ""
+
 #. js-lingui-id: halrRh
 #: src/pages/settings/ai/constants/SettingsAiAssistantFaceLabels.ts
 msgid "Happy"
@@ -15144,6 +15248,13 @@ msgstr "Importeren {importProgress}%"
 #: src/modules/spreadsheet-import/steps/components/ImportDataStep.tsx
 msgid "Importing Data ..."
 msgstr "Data importeren ..."
+
+#. js-lingui-id: 8BCi9F
+#. placeholder {0}: Math.ceil((addDays(config.startDate, milestones[nextIndex].offsetDays).getTime() - Date.now()) / DAY_MS)
+#. placeholder {1}: formatDay(addDays(config.startDate, milestones[nextIndex].offsetDays))
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "IN {0} DAYS · {1}"
+msgstr ""
 
 #. js-lingui-id: bDESCJ
 #: src/modules/ai/components/AiChatThreadChannelIcon.tsx
@@ -16946,6 +17057,11 @@ msgstr "Vermeld op de Marketplace"
 msgid "Listed on the unsubscribe page"
 msgstr "Vermeld op de afmeldpagina"
 
+#. js-lingui-id: ZVCRHy
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "Listening…"
+msgstr ""
+
 #. js-lingui-id: HhVDr2
 #: src/modules/settings/data-model/objects/forms/components/SettingsDataModelObjectAboutForm.tsx
 msgid "Listing"
@@ -18025,6 +18141,11 @@ msgstr "Microfoon- en cameratoegang ingeschakeld"
 msgid "Microphone or camera in use"
 msgstr "Microfoon of camera in gebruik"
 
+#. js-lingui-id: e1fCNb
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "Microphone problem. Try reloading the page, then call again."
+msgstr ""
+
 #. js-lingui-id: 6cH65H
 #: src/modules/settings/security/components/SettingsSecurityAuthBypassOptionsList.tsx
 #: src/modules/settings/security/components/SettingsSecurityAuthProvidersOptionsList.tsx
@@ -18487,6 +18608,11 @@ msgstr "moet een array zijn van geldige e-mails"
 msgid "Must be true to save. A write that makes it false is rejected."
 msgstr "Moet waar zijn om op te slaan. Een schrijfbewerking die dit onwaar maakt, wordt geweigerd."
 
+#. js-lingui-id: MqhKEo
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "Mute microphone"
+msgstr ""
+
 #. js-lingui-id: OJCJh9
 #: src/pages/settings/developers/tabs/SettingsDevelopersAppsTab.tsx
 msgid "My apps"
@@ -18866,6 +18992,11 @@ msgstr "Nieuwe limiet"
 msgid "New message"
 msgstr "Nieuw bericht"
 
+#. js-lingui-id: T/xN5+
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "New milestone"
+msgstr ""
+
 #. js-lingui-id: ROxeMs
 #: src/pages/settings/admin-panel/SettingsAdminNewAiModel.tsx
 #: src/pages/settings/admin-panel/SettingsAdminNewAiModel.tsx
@@ -19009,6 +19140,11 @@ msgstr "Volgende factuur {totalRenewDate}. Het factuurbedrag kan variëren als j
 #: src/modules/workflow/workflow-steps/workflow-actions/iterator-action/components/WorkflowIteratorSubStepSwitcher.tsx
 msgid "Next iteration"
 msgstr "Volgende iteratie"
+
+#. js-lingui-id: kqAy8M
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "NEXT MILESTONE"
+msgstr ""
 
 #. js-lingui-id: g8JmSC
 #: src/modules/ai/components/AiChatTimePickerCard.tsx
@@ -19638,6 +19774,11 @@ msgstr "Geen metrische gegevens beschikbaar"
 #: src/modules/ai/dictation/utils/getDictationFailureMessage.ts
 msgid "No microphone is available. Connect one and try again."
 msgstr "Er is geen microfoon beschikbaar. Sluit er een aan en probeer het opnieuw."
+
+#. js-lingui-id: LH4Bm0
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "No microphone was found on this Mac."
+msgstr ""
 
 #. js-lingui-id: WGQJB3
 #: src/modules/ai/utils/getAiModelModeDescription.ts
@@ -20304,6 +20445,7 @@ msgstr "Niet gesynchroniseerd"
 #: src/modules/page-layout/widgets/components/RecordPageAddWidgetSection.tsx
 #: src/modules/side-panel/hooks/useOpenWidgetSettingsInSidePanel.ts
 #: src/modules/side-panel/pages/page-layout/components/SidePanelPageLayoutRecordPageWidgetTypeSelect.tsx
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
 msgid "Note"
 msgstr "Notitie"
 
@@ -20870,6 +21012,11 @@ msgstr "Gesprek openen"
 #: src/modules/settings/mcp/utils/buildMcpSetupCategories.tsx
 msgid "Open Cursor's MCP installer with the Twenty remote server config."
 msgstr "Open de MCP-installer van Cursor met de Twenty-configuratie voor externe server."
+
+#. js-lingui-id: Pu/DOR
+#: src/modules/telephony/components/TelephonyDialer.tsx
+msgid "Open dial pad"
+msgstr ""
 
 #. js-lingui-id: JvSHIq
 #: src/modules/getting-started/components/GettingStartedSidebarCard.tsx
@@ -21823,6 +21970,11 @@ msgstr "De limiet voor persoonlijk gebruik wordt opnieuw ingesteld over {daysUnt
 msgid "Phone"
 msgstr "Telefoon"
 
+#. js-lingui-id: ZuLy43
+#: src/modules/telephony/components/TelephonyDialer.tsx
+msgid "Phone number"
+msgstr ""
+
 #. js-lingui-id: HF6C2L
 #: src/modules/object-record/record-field/ui/form-types/components/FormPhoneFieldInput.tsx
 msgid "Phone Number"
@@ -22749,6 +22901,11 @@ msgstr "Lees documentatie"
 msgid "Read emails"
 msgstr "E-mails lezen"
 
+#. js-lingui-id: TIKZxE
+#: src/modules/ai/components/AiChatReadAloudButton.tsx
+msgid "Read it to me"
+msgstr ""
+
 #. js-lingui-id: U26cMX
 #: src/pages/settings/ai/components/SettingsAiSystemPromptsSection.tsx
 msgid "Read system prompts"
@@ -23513,6 +23670,11 @@ msgstr "Lid verwijderen"
 #: src/pages/settings/members/SettingsWorkspaceMember.tsx
 msgid "Remove member from workspace"
 msgstr "Lid uit werkruimte verwijderen"
+
+#. js-lingui-id: ClSaC+
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "Remove milestone"
+msgstr ""
 
 #. js-lingui-id: RlqUBz
 #: src/modules/settings/ai/components/SettingsAiModelsTable.tsx
@@ -26940,6 +27102,7 @@ msgstr "Start een nieuw Organisatie-abonnement."
 #. js-lingui-id: WAjFYI
 #: src/modules/settings/admin-panel/health-status/maintenance-mode/components/SettingsAdminMaintenanceMode.tsx
 #: src/modules/settings/event-logs/components/EventLogFilters.tsx
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
 msgid "Start date"
 msgstr "Startdatum"
 
@@ -26952,6 +27115,11 @@ msgstr "Dicteren starten"
 #: src/modules/settings/billing/components/SettingsBillingLimitsEmptyState.tsx
 msgid "Start from scratch"
 msgstr "Vanaf nul beginnen"
+
+#. js-lingui-id: CcALNm
+#: src/modules/ai/voice/components/AiVoiceCallButton.tsx
+msgid "Start speech-to-speech call"
+msgstr ""
 
 #. js-lingui-id: c3uca5
 #: src/pages/onboarding/SyncEmails.tsx
@@ -27104,6 +27272,11 @@ msgstr "Dicteren stoppen"
 #: src/modules/information-banner/components/impersonate/InformationBannerIsImpersonating.tsx
 msgid "Stop impersonating"
 msgstr "Stop met imiteren"
+
+#. js-lingui-id: Z6OEfL
+#: src/modules/ai/components/AiChatReadAloudButton.tsx
+msgid "Stop reading"
+msgstr ""
 
 #. js-lingui-id: lQeGNv
 #: src/modules/ai/components/internal/SendMessageButton.tsx
@@ -29243,6 +29416,11 @@ msgstr ""
 msgid "Total Count"
 msgstr "Totaal aantal"
 
+#. js-lingui-id: tWIg+u
+#: src/modules/tracker-overlay/components/TrackerOverlay.tsx
+msgid "Total days"
+msgstr ""
+
 #. js-lingui-id: /H9dXa
 #: src/modules/onboarding/components/free-credits/OnboardingFreeCreditsPopoverContent.tsx
 msgid "Total earned"
@@ -29566,6 +29744,16 @@ msgstr "Omzetten in"
 #: src/modules/settings/admin-panel/constants/SettingsAdminFeatureFlagMetadata.ts
 msgid "Turn the AI tab into an inbox to triage, assign, snooze and follow chats, let workflows send messages and agent questions to a member's inbox, and show a Conversations tab on record pages."
 msgstr "Maak van het AI-tabblad een inbox om chats te triëren, toe te wijzen, te snoozen en te volgen, laat workflows berichten en agentvragen naar de inbox van een lid sturen, en toon een tabblad Gesprekken op recordpagina's."
+
+#. js-lingui-id: ZE0Kuw
+#: src/modules/ai/voice/components/AiVoiceModeButton.tsx
+msgid "Turn voice replies off"
+msgstr ""
+
+#. js-lingui-id: 9gnA/W
+#: src/modules/ai/voice/components/AiVoiceModeButton.tsx
+msgid "Turn voice replies on"
+msgstr ""
 
 #. js-lingui-id: 2JBBhG
 #: src/modules/validation-rules/constants/ValidationRuleKeywords.ts
@@ -30071,6 +30259,11 @@ msgstr "Niet-gelijst"
 #: src/pages/settings/enterprise/SettingsEnterprise.tsx
 msgid "Unlock premium features like SSO, row-level security, and audit logs."
 msgstr "Ontgrendel premiumfuncties zoals SSO, beveiliging op rijniveau en auditlogs."
+
+#. js-lingui-id: X5yF0+
+#: src/modules/ai/voice/components/AiVoiceCallPanel.tsx
+msgid "Unmute microphone"
+msgstr ""
 
 #. js-lingui-id: Te2H8x
 #: src/modules/settings/developers/components/SettingsApiKeysFieldItemTableRow.tsx
@@ -32096,6 +32289,11 @@ msgstr "Einde werkuren"
 #: src/modules/ai/components/AiChatSchedulingPreferences.tsx
 msgid "Working hours start"
 msgstr "Begin werkuren"
+
+#. js-lingui-id: jt4Y7/
+#: src/modules/ai/components/AiActionsFeed.tsx
+msgid "Working on it…"
+msgstr ""
 
 #. js-lingui-id: pmUArF
 #: src/modules/command-menu-item/display/components/SidePanelCommandMenuItemDisplayPage.tsx
