@@ -16,6 +16,7 @@ import { AiChatMessageHeader } from '@/ai/components/AiChatMessageHeader';
 import { AiChatMessageReactionPicker } from '@/ai/components/AiChatMessageReactionPicker';
 import { AiChatMessageReactions } from '@/ai/components/AiChatMessageReactions';
 import { AiChatErrorRenderer } from '@/ai/components/AiChatErrorRenderer';
+import { AiChatReadAloudButton } from '@/ai/components/AiChatReadAloudButton';
 import { AiChatUserMessageCollapsibleContent } from '@/ai/components/AiChatUserMessageCollapsibleContent';
 import { agentChatFirstUnreadMessageIdSelector } from '@/ai/states/selectors/agentChatFirstUnreadMessageIdSelector';
 import { agentChatIsMessageBeforeFirstUserMessageFamilySelector } from '@/ai/states/selectors/agentChatIsMessageBeforeFirstUserMessageFamilySelector';
@@ -29,7 +30,7 @@ import { LightCopyIconButton } from '@/ui/input/components/LightCopyIconButton';
 import { useAtomStateValue } from '@/ui/utilities/state/jotai/hooks/useAtomStateValue';
 
 import { isExtendedFileUIPart } from 'twenty-shared/ai';
-import { isDefined, isNonEmptyArray } from 'twenty-shared/utils';
+import { isDefined, isNonEmptyArray, isNonEmptyString } from 'twenty-shared/utils';
 import { LabeledSeparator } from 'twenty-ui/components/layout';
 import { Avatar } from 'twenty-ui/primitives/data-display';
 import { themeCssVariables } from 'twenty-ui/theme';
@@ -359,6 +360,11 @@ export const AiChatMessage = ({
             </StyledFilesContainer>
           )}
           {shouldShowError && <AiChatErrorRenderer error={error} />}
+          {!isUser &&
+            !isLastMessageStreaming &&
+            isNonEmptyString(messageText) && (
+              <AiChatReadAloudButton text={messageText} />
+            )}
         </StyledMessageContainer>
         {isNonEmptyArray(agentChatMessage.parts) && (
           <StyledMessageFooter

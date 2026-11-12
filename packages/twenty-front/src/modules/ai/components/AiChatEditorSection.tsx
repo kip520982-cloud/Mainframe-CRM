@@ -20,7 +20,6 @@ import { AiChatAddMenu } from '@/ai/components/AiChatAddMenu';
 import { AiChatDictationButton } from '@/ai/dictation/components/AiChatDictationButton';
 import { AiVoiceCallButton } from '@/ai/voice/components/AiVoiceCallButton';
 import { AiVoiceCallPanel } from '@/ai/voice/components/AiVoiceCallPanel';
-import { AiVoiceModeButton } from '@/ai/voice/components/AiVoiceModeButton';
 import { AiChatDictationEffect } from '@/ai/dictation/components/AiChatDictationEffect';
 import { AiChatDictationHint } from '@/ai/dictation/components/AiChatDictationHint';
 import { AiChatComposerActionsRow } from '@/ai/components/internal/AiChatComposerActionsRow';
@@ -198,7 +197,6 @@ const EditableAiChatEditorSection = () => {
             <>
               <AiChatAddMenu editor={editor} />
               <AiChatDictationButton />
-              <AiVoiceModeButton />
               <AiVoiceCallButton />
               <AiChatContextUsageButton />
             </>

@@ -26,7 +26,7 @@ export const AiVoiceCallButton = () => {
       size="sm"
       color="neutral"
       onClick={handleStartCall}
-      aria-label={t`Start voice call with assistant`}
+      aria-label={t`Start speech-to-speech call`}
     >
       <IconPhone />
     </IconButton>
