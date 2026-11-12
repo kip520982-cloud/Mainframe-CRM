@@ -29,7 +29,7 @@ export class GrokRealtimeSessionService {
   async createBrowserSession(
     input: GrokSessionInput = {},
   ): Promise<GrokRealtimeSession> {
-    const apiKey = process.env.XAI_API_KEY || process.env.GROK_VOICE_API_KEY;
+    const apiKey = process.env.XAI_API_KEY;
     if (!apiKey) {
       throw new ServiceUnavailableException('Grok voice is not configured');
     }
