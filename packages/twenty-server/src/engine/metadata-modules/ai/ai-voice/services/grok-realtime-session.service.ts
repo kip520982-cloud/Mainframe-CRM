@@ -41,7 +41,7 @@ export class GrokRealtimeSessionService {
     const voice =
       input.voice?.trim() ||
       process.env.GROK_VOICE ||
-      'eve';
+      'nejdfbmfnm3s'; // Kieran S custom voice
 
     const envAgentId =
       channel === 'answer-line'

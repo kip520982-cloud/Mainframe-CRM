@@ -188,15 +188,15 @@ export const AnswerLinePage = () => {
         </StyledLabel>
         <StyledHint>
           {doNotTranslate(
-            'Use your Voice Agent Builder agent to keep the trained persona, knowledge, and tools. Leave blank to run raw grok-voice-latest with the instructions below.',
+            'Use your Voice Agent Builder agent to keep the trained persona, knowledge, and tools. Leave blank to run raw grok-voice-latest with the instructions + voice below. If an agent ID is set, pick Kieran as that agent’s voice in the xAI console too — console agents own voice server-side.',
           )}
         </StyledHint>
         <StyledLabel>
-          {doNotTranslate('Voice')}
+          {doNotTranslate('Voice (Kieran S = nejdfbmfnm3s)')}
           <StyledInput
             value={config.voice}
             onChange={(event) => updateField('voice', event.target.value)}
-            placeholder="eve"
+            placeholder="nejdfbmfnm3s"
           />
         </StyledLabel>
         <StyledLabel>
